@@ -105,15 +105,17 @@ export default function StudentDashboard() {
         />
 
         {/* プロフィール概要カード */}
-        <div className="bg-white shadow-xl rounded-xl p-6 mb-8">
+        <div className="bg-white shadow-xl rounded-xl p-6 mb-8 mt-8">
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-gray-900">
             📄 自分のプロフィール概要
           </h2>
 
-          <InfoRow label="大学" value={profile.university} />
-          <InfoRow label="学部" value={profile.faculty} />
-          <InfoRow label="学年" value={profile.grade} />
-          <InfoRow label="スキル" value={profile.skills} />
+          <div className="space-y-3">
+            <InfoRow label="大学" value={profile.university} />
+            <InfoRow label="学部" value={profile.faculty} />
+            <InfoRow label="学年" value={profile.grade} />
+            <InfoRow label="スキル" value={profile.skills} />
+          </div>
         </div>
 
       </div>

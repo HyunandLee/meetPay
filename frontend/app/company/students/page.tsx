@@ -33,11 +33,10 @@ export default function StudentSearchPage() {
     load();
   }, []);
 
-  // 🔎 検索フィルタ
+  // 🔍 ローカル検索フィルタ
   const filtered = students.filter((s) => {
     const text =
-      `${s.name} ${s.university} ${s.faculty} ${s.skills}`
-        .toLowerCase();
+      `${s.name} ${s.university} ${s.faculty} ${s.skills}`.toLowerCase();
 
     return text.includes(search.toLowerCase());
   });
@@ -68,7 +67,9 @@ export default function StudentSearchPage() {
           ))}
 
           {filtered.length === 0 && (
-            <p className="text-gray-500 text-center mt-10">該当する学生がいません。</p>
+            <p className="text-gray-500 text-center mt-10">
+              該当する学生がいません。
+            </p>
           )}
         </div>
       </div>
@@ -89,15 +90,27 @@ function StudentCard({ student }: { student: Student }) {
         🛠️ スキル：{student.skills ?? "未登録"}
       </p>
 
-      {/* オファー */}
-      {student.wallet_address && (
+      {/* ボタン部分 */}
+      <div className="mt-4 flex gap-3">
+
+        {/* 👀 詳細ページへ */}
         <Link
-          href={`/company/offer-send?to=${student.wallet_address}`}
-          className="inline-block mt-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
+          href={`/company/students/${student.id}`}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
         >
-          🎁 オファーを送る
+          👀 詳細を見る
         </Link>
-      )}
+
+        {/* 🎁 直接オファー送る（詳細からも送れる設計にする） */}
+        {student.wallet_address && (
+          <Link
+            href={`/company/offer-send?to=${student.wallet_address}`}
+            className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
+          >
+            🎁 オファー
+          </Link>
+        )}
+      </div>
     </div>
   );
 }

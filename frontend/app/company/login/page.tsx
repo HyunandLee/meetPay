@@ -1,84 +1,87 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "../../../lib/supabaseClient";
+import { supabase } from "@/utils/supabaseClient";
+import { useRouter } from "next/navigation";
 
-export default function CompanyLoginPage() {
+export default function CompanyLogin() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
   async function login() {
+    console.log("▶ Company logging in:", email);
+    setErrorMsg("");
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+
+    console.log("📌 login result:", { data, error });
 
     if (error) {
       setErrorMsg(error.message);
       return;
     }
 
-    // ログイン成功 → ダッシュボードへ
-    window.location.href = "/company/dashboard";
+    console.log("🔑 user:", data.user);
+
+    router.push("/company/dashboard");
   }
 
   return (
-    <main style={{ padding: 40, maxWidth: 360 }}>
-      <h1>企業ログイン</h1>
+    <main className="min-h-screen bg-gray-100 p-6 flex items-center justify-center">
+      <div className="bg-white w-full max-w-lg p-8 rounded-2xl shadow-xl">
 
-      <label>Email</label>
-      <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        style={{
-          width: "100%",
-          padding: 10,
-          marginBottom: 10,
-          border: "1px solid #ccc",
-          borderRadius: 6,
-        }}
-      />
+        {/* タイトル */}
+        <h1 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+          🏢 企業ログイン
+        </h1>
 
-      <label>Password</label>
-      <input
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        style={{
-          width: "100%",
-          padding: 10,
-          marginBottom: 10,
-          border: "1px solid #ccc",
-          borderRadius: 6,
-        }}
-      />
+        {/* Email */}
+        <label className="font-semibold block text-gray-900">Email</label>
+        <input
+          className="w-full p-3 border rounded-xl bg-white text-gray-900 placeholder-gray-400 mb-4"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="company@example.com"
+        />
 
-      {errorMsg && <p style={{ color: "red" }}>{errorMsg}</p>}
+        {/* Password */}
+        <label className="font-semibold block text-gray-900">Password</label>
+        <input
+          type="password"
+          className="w-full p-3 border rounded-xl bg-white text-gray-900 placeholder-gray-400 mb-4"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••"
+        />
 
-      <button
-        onClick={login}
-        style={{
-          width: "100%",
-          padding: 12,
-          backgroundColor: "#3b82f6",
-          color: "white",
-          border: "none",
-          borderRadius: 8,
-          cursor: "pointer",
-          marginTop: 10,
-        }}
-      >
-        ログイン
-      </button>
+        {/* Error表示 */}
+        {errorMsg && (
+          <p className="text-red-500 text-sm mb-4 bg-red-50 p-3 rounded-xl border border-red-200">
+            {errorMsg}
+          </p>
+        )}
 
-      <p style={{ marginTop: 20 }}>
-        アカウントがありませんか？{" "}
-        <a href="/company/register" style={{ color: "#3b82f6" }}>
-          新規作成
-        </a>
-      </p>
+        {/* Login button */}
+        <button
+          onClick={login}
+          className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-lg font-semibold hover:opacity-90 transition"
+        >
+          ログイン
+        </button>
+
+        {/* リンク */}
+        <p className="text-center text-gray-600 mt-4">
+          アカウントをお持ちでないですか？{" "}
+          <a href="/company/register" className="text-blue-600 underline">
+            新規登録はこちら
+          </a>
+        </p>
+      </div>
     </main>
   );
 }

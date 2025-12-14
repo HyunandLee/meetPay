@@ -1,62 +1,123 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useConnections } from "wagmi";
+import { useEffect, useState, useRef } from "react";
+import Link from "next/link";
 import BackToDashboard from "@/components/BackToDashboard";
 import { getTransferLogsByAddress, type OfferLog } from "@/lib/getTransferLogs";
+import { supabase } from "@/utils/supabaseClient";
 
 export default function StudentOffersPage() {
   const [logs, setLogs] = useState<OfferLog[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [profileWallet, setProfileWallet] = useState<`0x${string}` | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [logsLoading, setLogsLoading] = useState(false);
+  const [connectError, setConnectError] = useState<string | null>(null); // プロフ未設定などのエラー表示用に残す
 
-  const connections = useConnections();
-  const connection = connections[0];
-  const myAddress = connection?.accounts?.[0];
-
+  // プロフィールのウォレットを取得
   useEffect(() => {
-    async function load() {
-      if (!myAddress) {
-        setLoading(false);
+    async function loadProfile() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        setProfileLoading(false);
         return;
       }
 
-      const history = await getTransferLogsByAddress(myAddress);
+      const { data } = await supabase
+        .from("student_profiles")
+        .select("wallet_address")
+        .eq("user_id", user.id)
+        .single();
+
+      if (data?.wallet_address) {
+        setProfileWallet(data.wallet_address as `0x${string}`);
+      }
+
+      setProfileLoading(false);
+    }
+
+    loadProfile();
+  }, []);
+
+  // プロフィールウォレットを元に履歴を取得
+  useEffect(() => {
+    async function load() {
+      if (!profileWallet) {
+        setLogs([]);
+        setLogsLoading(false);
+        return;
+      }
+
+      setLogsLoading(true);
+
+      const history = await getTransferLogsByAddress(profileWallet);
 
       const received = history.filter(
-        (log) => log.to.toLowerCase() === myAddress.toLowerCase()
+        (log) => log.to.toLowerCase() === profileWallet.toLowerCase()
       );
 
       received.sort((a, b) => b.timestamp - a.timestamp);
 
       setLogs(received);
-      setLoading(false);
+      setLogsLoading(false);
     }
 
     load();
-  }, [myAddress]);
+  }, [profileWallet]);
 
   return (
     <main className="min-h-screen bg-gray-100 p-6 text-gray-900">
       <div className="max-w-3xl mx-auto">
 
         {/* 戻るボタン */}
-        <BackToDashboard />
+        <BackToDashboard href="/student/dashboard" />
 
         <h1 className="text-3xl font-bold mb-6 flex items-center gap-2">
           🎁 企業からのオファー履歴
         </h1>
 
-        {!myAddress && (
-          <p className="text-red-500">ウォレットを接続してください。</p>
-        )}
+        {/* ウォレット状態 */}
+        <div className="space-y-2 mb-4">
+          {profileLoading && (
+            <p className="text-gray-500">プロフィールを読み込み中...</p>
+          )}
 
-        {loading && (
+          {!profileLoading && !profileWallet && (
+            <p className="text-red-500">
+              プロフィールにウォレットアドレスを設定してください。{" "}
+              <Link href="/student/profile" className="underline text-blue-600">
+                プロフィール編集へ
+              </Link>
+            </p>
+          )}
+
+          {profileWallet && (
+            <p className="text-sm text-gray-700">
+              プロフィールのウォレット:{" "}
+              <span className="font-mono break-all">{profileWallet}</span>
+            </p>
+          )}
+
+          {connectError && (
+            <p className="text-red-500 text-sm">{connectError}</p>
+          )}
+        </div>
+
+        {logsLoading && (
           <p className="text-gray-500 mt-4">読み込み中...</p>
         )}
 
-        {!loading && logs.length === 0 && (
+        {!logsLoading && logs.length === 0 && profileWallet && (
           <p className="text-gray-600 mt-4">
             まだオファーは届いていません。
+          </p>
+        )}
+
+        {!profileLoading && !profileWallet && (
+          <p className="text-gray-600 mt-4">
+            ウォレットを設定するとオファー履歴を表示できます。
           </p>
         )}
 
