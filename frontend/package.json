@@ -11,9 +11,9 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.86.0",
     "lucide-react": "^0.555.0",
-    "next": "^16.0.7",
-    "react": "^19.2.1",
-    "react-dom": "^19.2.1",
+    "next": "^16.0.10",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "viem": "^2.40.3",
     "wagmi": "^3.0.2"
   },
