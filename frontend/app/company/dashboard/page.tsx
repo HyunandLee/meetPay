@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/utils/supabaseClient";
+import { supabase } from "@/lib/supabase/browserClient";
 import Link from "next/link";
 
 type CompanyProfile = {
@@ -59,7 +59,7 @@ export default function CompanyDashboard() {
 
           <Link
             href="/company/profile"
-            className="inline-block bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-6 py-3 rounded-lg hover:opacity-90 transition"
+            className="inline-block bg-linear-to-r from-purple-500 to-indigo-500 text-white px-6 py-3 rounded-lg hover:opacity-90 transition"
           >
             プロフィールを作成する ✏️
           </Link>
@@ -174,7 +174,7 @@ function DashboardButton({
   return (
     <Link
       href={href}
-      className={`block text-center py-4 rounded-xl text-white font-semibold text-lg shadow bg-gradient-to-r ${color} hover:opacity-90 transition`}
+      className={`block text-center py-4 rounded-xl text-white font-semibold text-lg shadow bg-linear-to-r ${color} hover:opacity-90 transition`}
     >
       {label}
     </Link>

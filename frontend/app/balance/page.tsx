@@ -1,8 +1,8 @@
 "use client";
 
 import { useConnections, useReadContract } from "wagmi";
-import { TJPYC_ADDRESS, TJPYC_DECIMALS } from "../../constants";
-import tjpycArtifact from "../../abi/tjpyc.json";
+import { TJPYC_ADDRESS, TJPYC_DECIMALS } from "@/constants";
+import tjpycArtifact from "@/abi/tjpyc.json";
 
 export default function BalancePage() {
   const connections = useConnections();

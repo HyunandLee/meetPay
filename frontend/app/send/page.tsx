@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useConnections, useWriteContract } from "wagmi";
-import { TJPYC_ADDRESS, TJPYC_DECIMALS } from "../../constants";
-import tjpycArtifact from "../../abi/tjpyc.json";
+import { TJPYC_ADDRESS, TJPYC_DECIMALS } from "@/constants";
+import tjpycArtifact from "@/abi/tjpyc.json";
 
 export default function SendPage() {
   const connections = useConnections();

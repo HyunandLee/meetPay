@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "../../../lib/supabaseClient";
+import { supabase } from "@/lib/supabase/browserClient";
 
 export default function CompanyRegisterPage() {
   const [email, setEmail] = useState("");

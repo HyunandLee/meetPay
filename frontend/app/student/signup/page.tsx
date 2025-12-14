@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { supabase } from "@/utils/supabaseClient";
+import { supabase } from "@/lib/supabase/browserClient";
 import { useState } from "react";
 
 export default function StudentSignup() {

@@ -1,0 +1,1 @@
+[SQL 命名規則](https://zenn.dev/channnnsm/articles/37969fc62480ca)

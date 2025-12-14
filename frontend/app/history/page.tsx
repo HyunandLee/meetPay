@@ -5,7 +5,7 @@ import { useConnections } from "wagmi";
 import { createPublicClient, http, parseAbiItem } from "viem";
 import { polygonAmoy } from "viem/chains";
 
-import { TJPYC_ADDRESS, TJPYC_DECIMALS } from "../../constants";
+import { TJPYC_ADDRESS, TJPYC_DECIMALS } from "@/constants";
 
 // on-chainログの生データ（必要な部分だけ切り出した型）
 type RawLog = {
