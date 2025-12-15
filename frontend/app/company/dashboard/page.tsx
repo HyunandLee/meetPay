@@ -37,7 +37,7 @@ export default function CompanyDashboard() {
       const { data } = await supabase
         .from("company")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("id", user.id)
         .single();
 
       if (data) setProfile(data);
