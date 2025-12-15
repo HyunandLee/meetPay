@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabaseClient";
 import Link from "next/link";
 import BackToDashboard from "@/components/BackToDashboard";
+import { useConnections } from "wagmi";
+import { useRouter } from "next/navigation";
 
 type CompanyProfile = {
-  company_name: string;
+  name: string;
   contact_name: string;
   description: string;
   industry: string;
@@ -21,9 +23,9 @@ type CompanyProfile = {
 
 export default function CompanyProfilePage() {
   const [profileId, setProfileId] = useState<string | null>(null);
-
+  const router = useRouter();
   const [form, setForm] = useState<CompanyProfile>({
-    company_name: "",
+    name: "",
     contact_name: "",
     description: "",
     industry: "",
@@ -35,6 +37,15 @@ export default function CompanyProfilePage() {
     strengths: "",
     benefits: "",
   });
+
+  const connections = useConnections();
+
+  function putMyAddressToForm() {
+    if (connections[0]?.accounts[0]) {
+      setForm({ ...form, wallet_address: connections[0]?.accounts[0] });
+    }
+  }
+  
 
   const [loading, setLoading] = useState(true);
 
@@ -55,14 +66,14 @@ export default function CompanyProfilePage() {
       const { data } = await supabase
         .from("company")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("id", user.id)
         .single();
 
       if (data) {
         setProfileId(data.id);
 
         setForm({
-          company_name: data.company_name ?? "",
+          name: data.name ?? "",
           contact_name: data.contact_name ?? "",
           description: data.description ?? "",
           industry: data.industry ?? "",
@@ -90,7 +101,7 @@ export default function CompanyProfilePage() {
 
     const payload = {
       ...form,
-      user_id: user.id,
+      id: user.id,
       average_salary:
         form.average_salary === "" ? null : Number(form.average_salary),
       average_age: form.average_age === "" ? null : Number(form.average_age),
@@ -116,6 +127,7 @@ export default function CompanyProfilePage() {
 
     if (error) alert(error.message);
     else alert("保存しました！");
+    router.push("/company/dashboard");
   }
 
   if (loading)
@@ -154,14 +166,32 @@ export default function CompanyProfilePage() {
                            focus:ring-2 focus:ring-indigo-400 outline-none"
               />
             ) : (
-              <input
-                name={key}
-                value={form[key]}
-                onChange={handleChange}
-                className="w-full border border-gray-300 p-3 rounded-md
+              key === "wallet_address" ? (
+              <>
+                <input
+                  readOnly
+                  name={key}
+                  value={form[key]}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 p-3 rounded-md
                            text-gray-900 placeholder-gray-400
                            focus:ring-2 focus:ring-indigo-400 outline-none"
-              />
+                />
+                <button 
+                  onClick={putMyAddressToForm}
+                  className="block text-center m-4 p-4 rounded-xl text-white font-semibold shadow bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-90 transition"  
+                >ウォレットアドレスを入力</button>
+              </>
+              ) : (
+                <input
+                  name={key}
+                  value={form[key]}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 p-3 rounded-md
+                            text-gray-900 placeholder-gray-400
+                            focus:ring-2 focus:ring-indigo-400 outline-none"
+                />
+              )
             )}
           </div>
         ))}
@@ -188,7 +218,7 @@ const textareaKeys = [
 
 function labelFor(key: keyof CompanyProfile): string {
   const labels: Record<keyof CompanyProfile, string> = {
-    company_name: "🏢 会社名",
+    name: "🏢 会社名",
     contact_name: "👤 担当者名",
     description: "💬 会社の紹介",
     industry: "📂 業界",
