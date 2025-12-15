@@ -53,7 +53,7 @@ export default function CompanyProfilePage() {
       if (!user) return setLoading(false);
 
       const { data } = await supabase
-        .from("company_profiles")
+        .from("company")
         .select("*")
         .eq("user_id", user.id)
         .single();
@@ -100,13 +100,13 @@ export default function CompanyProfilePage() {
 
     if (profileId) {
       const res = await supabase
-        .from("company_profiles")
+        .from("company")
         .update(payload)
         .eq("id", profileId);
       error = res.error;
     } else {
       const res = await supabase
-        .from("company_profiles")
+        .from("company")
         .insert(payload)
         .select()
         .single();

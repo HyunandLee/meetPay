@@ -14,12 +14,17 @@ export default function CompanyLogin() {
     console.log("▶ Company logging in:", email);
     setErrorMsg("");
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { data, error } = await supabase.auth.signInWithWeb3({
+      chain: 'ethereum',
+      statement: 'Please sign this message to confirm your identity.',
+    })
 
-    console.log("📌 login result:", { data, error });
+    // const { data, error } = await supabase.auth.signInWithPassword({
+    //   email,
+    //   password,
+    // });
+
+    // console.log("📌 login result:", { data, error });
 
     if (error) {
       setErrorMsg(error.message);
@@ -40,24 +45,25 @@ export default function CompanyLogin() {
           🏢 企業ログイン
         </h1>
 
+        
         {/* Email */}
-        <label className="font-semibold block text-gray-900">Email</label>
+        {/* <label className="font-semibold block text-gray-900">Email</label>
         <input
           className="w-full p-3 border rounded-xl bg-white text-gray-900 placeholder-gray-400 mb-4"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="company@example.com"
-        />
+        /> */}
 
         {/* Password */}
-        <label className="font-semibold block text-gray-900">Password</label>
+        {/* <label className="font-semibold block text-gray-900">Password</label>
         <input
           type="password"
           className="w-full p-3 border rounded-xl bg-white text-gray-900 placeholder-gray-400 mb-4"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="••••••••"
-        />
+        /> */}
 
         {/* Error表示 */}
         {errorMsg && (

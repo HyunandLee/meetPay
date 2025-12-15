@@ -22,7 +22,7 @@ export default function StudentSearchPage() {
   useEffect(() => {
     async function load() {
       const { data, error } = await supabase
-        .from("student_profiles")
+        .from("student")
         .select("*")
         .order("created_at", { ascending: false });
 

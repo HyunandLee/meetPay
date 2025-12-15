@@ -48,7 +48,7 @@ export default function StudentProfilePage() {
       if (!user) return;
 
       const { data } = await supabase
-        .from("student_profiles")
+        .from("student")
         .select("*")
         .eq("user_id", user.id)
         .single();
@@ -82,7 +82,7 @@ export default function StudentProfilePage() {
     };
 
     const { error } = await supabase
-      .from("student_profiles")
+      .from("student")
       .upsert(payload);
 
     if (error) {

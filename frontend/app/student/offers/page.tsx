@@ -26,7 +26,7 @@ export default function StudentOffersPage() {
       }
 
       const { data } = await supabase
-        .from("student_profiles")
+        .from("student")
         .select("wallet_address")
         .eq("user_id", user.id)
         .single();

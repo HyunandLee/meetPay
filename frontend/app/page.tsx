@@ -3,6 +3,8 @@
 import { useConnections, useDisconnect, useConnect } from "wagmi";
 import { injected } from "wagmi/connectors";
 import Link from "next/link";
+import { supabase } from "@/utils/supabaseClient";
+import { useEffect } from "react";
 
 export default function Home() {
   // 接続情報
@@ -14,6 +16,19 @@ export default function Home() {
   // connect と disconnect
   const { connect } = useConnect();
   const { disconnect } = useDisconnect();
+
+  async function getSchemaFromSwagger() {
+    // PostgRESTのルートエンドポイントを叩く
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/?apikey=${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`);
+    const jsonData = await response.json();
+  
+    // jsonData.definitions に各テーブルの定義が入っています
+    console.log(jsonData.definitions);
+  }
+
+  useEffect(() => {
+    getSchemaFromSwagger();
+  }, []);
 
   function connectWallet() {
     connect({

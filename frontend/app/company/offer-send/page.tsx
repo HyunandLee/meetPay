@@ -49,7 +49,7 @@ export default function OfferSendPage() {
       }
 
       const { data } = await supabase
-        .from("company_profiles")
+        .from("company")
         .select("wallet_address")
         .eq("user_id", user.id)
         .single();

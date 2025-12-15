@@ -33,9 +33,9 @@ export default function CompanyRegisterPage() {
       return;
     }
 
-    // ✨ 2. company_profiles にプロフィール新規作成
+    // ✨ 2. company にプロフィール新規作成
     const { error: insertError } = await supabase
-      .from("company_profiles")
+      .from("company")
       .insert({
         user_id: user.id,
         company_name: companyName,

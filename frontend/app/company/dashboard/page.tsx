@@ -35,7 +35,7 @@ export default function CompanyDashboard() {
       }
 
       const { data } = await supabase
-        .from("company_profiles")
+        .from("company")
         .select("*")
         .eq("user_id", user.id)
         .single();
