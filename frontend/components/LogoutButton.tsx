@@ -1,17 +1,14 @@
-"use client";
+import { logoutAction } from "@/app/actions/logoutAction";
 
-import { useRouter } from "next/navigation";
-import { supabase } from "@/utils/supabaseClient";
-
-export default function LogoutButton({ link }: { link: string }) {
-  const router = useRouter();
-
-  async function logout() {
-    await supabase.auth.signOut();
-    router.push(link);
-  }
-
+export default function LogoutButton() {
   return (
-    <button onClick={logout} className="block text-center m-4 p-4 rounded-xl text-white font-semibold shadow bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-90 transition">ログアウト</button>
+    <form action={logoutAction}>
+      <button
+        type="submit"
+        className="block text-center m- p-4 rounded-xl text-white font-semibold shadow bg-linear-to-r from-purple-600 to-indigo-600 hover:opacity-90 transition"
+      >
+        ログアウト
+      </button>
+    </form>
   );
 }
