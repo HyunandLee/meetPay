@@ -26,18 +26,17 @@ export async function updateSession(request: NextRequest) {
   )
 
   const { data } = await supabase.auth.getClaims()
-  console.log('data:', data);
+  // console.log('data:', data);
 
   const user = data?.claims?.user;
-  if (
-    !user &&
-    !request.nextUrl.pathname.startsWith('/login') &&
-    !request.nextUrl.pathname.startsWith('/auth')
-  ) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/login'
-    return NextResponse.redirect(url)
+  const url = request.nextUrl.clone();
+  if (!user) {
+    if (url.pathname.startsWith("/company")) {
+      url.pathname = "/company/login";
+    } else if (url.pathname.startsWith("/student")) {
+      url.pathname = "/student/login";
+    }
+    return NextResponse.redirect(url);
   }
-
   return supabaseResponse;
 }
