@@ -55,6 +55,7 @@ export default function CompanyCreate() {
               </div>
             )
           }
+          {/* <input type="hidden" name="userId" value={user.id} /> */}
           <label className="font-semibold block text-gray-900">Company Name</label>
           <input
             type="text"

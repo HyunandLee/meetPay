@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { loginAction } from "@/app/actions/loginAction";
 import Form from "next/form"
+import Link from "next/link";
 
 export default function CompanyLogin() {
   const [state, formAction] = useActionState(loginAction, {
@@ -39,8 +40,15 @@ export default function CompanyLogin() {
             placeholder="••••••••"
           />
           <button type="submit" className="w-full py-3 bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-lg font-semibold hover:opacity-90 transition">
-            ログイン</button>
+            ログイン
+          </button>
         </Form>
+        <p className="text-center text-gray-600 mt-4">
+          アカウントをお持ちでないですか？{" "}
+          <Link href="/company/register" className="text-blue-600 underline">
+            新規登録はこちら
+          </Link>
+        </p>
       </div>
     </main>
   )
