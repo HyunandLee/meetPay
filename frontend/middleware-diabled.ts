@@ -23,10 +23,12 @@ export async function middleware(req: NextRequest) {
     "/company/profile",
     "/company/offer-send",
     "/company/offers",
+    "/company/chat",
   ];
+  const sharedProtected = ["/student/chat"];
 
   // --- 学生保護ページ ---
-  if (studentProtected.some((p) => path.startsWith(p))) {
+  if (studentProtected.concat(sharedProtected).some((p) => path.startsWith(p))) {
     if (!user || user.user_metadata.role !== "student") {
       return NextResponse.redirect(new URL("/student/login", req.url));
     }

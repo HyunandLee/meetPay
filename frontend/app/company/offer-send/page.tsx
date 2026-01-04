@@ -15,6 +15,11 @@ import { TJPYC_ADDRESS, TJPYC_DECIMALS } from "@/constants";
 import BackToDashboard from "@/components/BackToDashboard";
 import tjpycArtifact from "@/abi/tjpyc.json";
 import { supabase } from "@/utils/supabaseClient";
+import {
+  fetchRecentInterviewees,
+  fetchThreadStudentWallet,
+} from "@/lib/chatApi";
+import { RecentInterview } from "@/lib/chatTypes";
 
 // 型：送金処理で出るエラー
 type WagmiError = {
@@ -24,6 +29,7 @@ type WagmiError = {
 export default function OfferSendPage() {
   const params = useSearchParams();
   const defaultTo = params.get("to") ?? ""; // 学生アドレス
+  const defaultThread = params.get("thread") ?? "";
 
   const connections = useConnections();
   const connection = connections[0];
@@ -35,12 +41,15 @@ export default function OfferSendPage() {
   const { disconnect } = useDisconnect();
   const [hasEthereum, setHasEthereum] = useState<boolean | null>(null);
   const [profileAddress, setProfileAddress] = useState("");
+  const [companyId, setCompanyId] = useState<string | null>(null);
   const [internalPassword, setInternalPassword] = useState("");
 
   const [to, setTo] = useState(defaultTo);
+  const [threadId, setThreadId] = useState(defaultThread);
   const [amount, setAmount] = useState("");
   const [message, setMessage] = useState("");
   const [txHash, setTxHash] = useState("");
+  const [recentInterviewees, setRecentInterviewees] = useState<RecentInterview[]>([]);
 
   const { writeContractAsync, isPending } = useWriteContract();
 
@@ -61,6 +70,16 @@ export default function OfferSendPage() {
     });
   }, [accountStatus, connectAsync, hasEthereum, isConnected]);
 
+  // threadパラメータがある場合は紐づくウォレットを取得
+  useEffect(() => {
+    if (!threadId) return;
+    fetchThreadStudentWallet(threadId)
+      .then((wallet) => {
+        if (wallet) setTo(wallet);
+      })
+      .catch((err) => console.warn("failed to fetch wallet from thread", err));
+  }, [threadId]);
+
   // プロフィールのウォレットアドレスを取得
   useEffect(() => {
     async function loadProfileAddress() {
@@ -70,7 +89,7 @@ export default function OfferSendPage() {
       if (!user) return;
       const { data, error } = await supabase
         .from("company_profiles")
-        .select("wallet_address")
+        .select("id, wallet_address")
         .eq("user_id", user.id)
         .single();
       if (error) {
@@ -78,6 +97,12 @@ export default function OfferSendPage() {
         return;
       }
       if (data?.wallet_address) setProfileAddress(data.wallet_address);
+      if (data?.id) {
+        setCompanyId(data.id);
+        fetchRecentInterviewees(data.id)
+          .then(setRecentInterviewees)
+          .catch((err) => console.warn("recent interviews load failed", err));
+      }
     }
     loadProfileAddress();
   }, []);
@@ -193,6 +218,11 @@ export default function OfferSendPage() {
             接続中のウォレット: {myAddress}
           </p>
         )}
+        {threadId && (
+          <p className="text-sm text-gray-700">
+            ひも付くスレッド: {threadId}
+          </p>
+        )}
         {mismatch && (
           <p className="text-red-600 font-semibold">
             プロフィールのウォレットと接続中のウォレットが一致しません。MetaMaskでアカウントを切り替えてください。
@@ -292,6 +322,41 @@ export default function OfferSendPage() {
 
           </div>
         )}
+      </div>
+
+      {/* 直近面談した学生の候補 */}
+      <div className="max-w-xl mx-auto mt-6 bg-white p-4 rounded-xl shadow">
+        <h2 className="text-lg font-semibold mb-3">🧭 直近面談した学生</h2>
+        <div className="space-y-2">
+          {recentInterviewees.map((r) => (
+            <div
+              key={r.thread_id}
+              className="border rounded-lg p-3 flex items-center justify-between gap-2"
+            >
+              <div>
+                <p className="font-semibold">{r.student_name ?? "学生"}</p>
+                <p className="text-xs text-gray-600 break-all">
+                  {r.student_wallet ?? "ウォレット未登録"}
+                </p>
+                <p className="text-xs text-gray-500">
+                  面談日時: {new Date(r.happened_at).toLocaleString()}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  if (r.student_wallet) setTo(r.student_wallet);
+                  setThreadId(r.thread_id);
+                }}
+                className="text-sm bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-3 py-2 rounded-lg hover:opacity-90"
+              >
+                宛先にセット
+              </button>
+            </div>
+          ))}
+          {companyId && recentInterviewees.length === 0 && (
+            <p className="text-sm text-gray-600">直近の面談データがありません。</p>
+          )}
+        </div>
       </div>
     </main>
   );
