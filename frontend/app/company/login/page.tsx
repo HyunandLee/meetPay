@@ -1,14 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabaseClient";
 
 export default function CompanyLoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
   async function login() {
+    setErrorMsg("");
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -20,65 +24,50 @@ export default function CompanyLoginPage() {
     }
 
     // ログイン成功 → ダッシュボードへ
-    window.location.href = "/company/dashboard";
+    router.push("/company/dashboard");
   }
 
   return (
-    <main style={{ padding: 40, maxWidth: 360 }}>
-      <h1>企業ログイン</h1>
+    <main className="min-h-screen bg-gray-100 p-6 flex items-center justify-center">
+      <div className="bg-white w-full max-w-lg p-8 rounded-2xl shadow-xl">
+        <h1 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+          🏢 企業ログイン
+        </h1>
 
-      <label>Email</label>
-      <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        style={{
-          width: "100%",
-          padding: 10,
-          marginBottom: 10,
-          border: "1px solid #ccc",
-          borderRadius: 6,
-        }}
-      />
+        <label className="font-semibold block text-gray-900">Email</label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full p-3 border rounded-xl bg-white text-gray-900 placeholder-gray-400 mb-4"
+        />
 
-      <label>Password</label>
-      <input
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        style={{
-          width: "100%",
-          padding: 10,
-          marginBottom: 10,
-          border: "1px solid #ccc",
-          borderRadius: 6,
-        }}
-      />
+        <label className="font-semibold block text-gray-900">Password</label>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full p-3 border rounded-xl bg-white text-gray-900 placeholder-gray-400 mb-6"
+        />
 
-      {errorMsg && <p style={{ color: "red" }}>{errorMsg}</p>}
+        {errorMsg && (
+          <p className="text-red-500 text-sm mb-4">{errorMsg}</p>
+        )}
 
-      <button
-        onClick={login}
-        style={{
-          width: "100%",
-          padding: 12,
-          backgroundColor: "#3b82f6",
-          color: "white",
-          border: "none",
-          borderRadius: 8,
-          cursor: "pointer",
-          marginTop: 10,
-        }}
-      >
-        ログイン
-      </button>
+        <button
+          onClick={login}
+          className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl text-lg font-semibold hover:opacity-90 transition"
+        >
+          ログイン
+        </button>
 
-      <p style={{ marginTop: 20 }}>
-        アカウントがありませんか？{" "}
-        <a href="/company/register" style={{ color: "#3b82f6" }}>
-          新規作成
-        </a>
-      </p>
+        <p className="text-center text-gray-600 mt-4">
+          アカウントがありませんか？{" "}
+          <a href="/company/register" className="text-blue-600 underline">
+            新規作成
+          </a>
+        </p>
+      </div>
     </main>
   );
 }

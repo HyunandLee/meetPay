@@ -1,11 +1,20 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
-import { useConnections, useWriteContract } from "wagmi";
+import { useEffect, useMemo, useState } from "react";
+import {
+  useAccount,
+  useConnections,
+  useConnect,
+  useDisconnect,
+  useWriteContract,
+} from "wagmi";
+import { injected } from "wagmi/connectors";
+import { polygonAmoy } from "wagmi/chains";
 import { TJPYC_ADDRESS, TJPYC_DECIMALS } from "@/constants";
 import BackToDashboard from "@/components/BackToDashboard";
 import tjpycArtifact from "@/abi/tjpyc.json";
+import { supabase } from "@/utils/supabaseClient";
 
 // 型：送金処理で出るエラー
 type WagmiError = {
@@ -20,6 +29,13 @@ export default function OfferSendPage() {
   const connection = connections[0];
   const myAddress = connection?.accounts[0];
   const isConnected = !!connection;
+  const { status: accountStatus } = useAccount();
+
+  const { connectAsync, isPending: isConnecting } = useConnect();
+  const { disconnect } = useDisconnect();
+  const [hasEthereum, setHasEthereum] = useState<boolean | null>(null);
+  const [profileAddress, setProfileAddress] = useState("");
+  const [internalPassword, setInternalPassword] = useState("");
 
   const [to, setTo] = useState(defaultTo);
   const [amount, setAmount] = useState("");
@@ -28,10 +44,93 @@ export default function OfferSendPage() {
 
   const { writeContractAsync, isPending } = useWriteContract();
 
+  // 初回マウントで MetaMask があるか確認し、未接続なら自動接続を試みる（拒否されたらログだけ）
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const { ethereum } = window as typeof window & { ethereum?: unknown };
+    setHasEthereum(!!ethereum);
+  }, []);
+
+  useEffect(() => {
+    const alreadyConnecting =
+      accountStatus === "connecting" || accountStatus === "reconnecting";
+    if (alreadyConnecting || isConnected || hasEthereum === false) return;
+    connectAsync({ connector: injected(), chainId: polygonAmoy.id }).catch((err) => {
+      // 初回ポップアップ拒否などのケース。ユーザー体験のため失敗は握り、手動再接続に任せる。
+      console.warn("auto-connect failed", err);
+    });
+  }, [accountStatus, connectAsync, hasEthereum, isConnected]);
+
+  // プロフィールのウォレットアドレスを取得
+  useEffect(() => {
+    async function loadProfileAddress() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data, error } = await supabase
+        .from("company_profiles")
+        .select("wallet_address")
+        .eq("user_id", user.id)
+        .single();
+      if (error) {
+        console.warn("failed to load profile address", error);
+        return;
+      }
+      if (data?.wallet_address) setProfileAddress(data.wallet_address);
+    }
+    loadProfileAddress();
+  }, []);
+
+  const mismatch = useMemo(() => {
+    if (!profileAddress || !myAddress) return false;
+    return profileAddress.toLowerCase() !== myAddress.toLowerCase();
+  }, [profileAddress, myAddress]);
+
+  const isLargeAmount = useMemo(() => {
+    if (!amount) return false;
+    try {
+      return BigInt(amount) >= BigInt(10_000);
+    } catch {
+      return false;
+    }
+  }, [amount]);
+
+  const REQUIRED_PASSWORD = process.env.NEXT_PUBLIC_INTERNAL_PASSWORD;
+
+  async function ensureConnected() {
+    if (isConnected) return;
+    await connectAsync({ connector: injected(), chainId: polygonAmoy.id });
+  }
+
   async function sendOffer() {
-    if (!isConnected) {
-      alert("ウォレットに接続してください");
+    if (!hasEthereum) {
+      alert("MetaMaskをインストールしてから送信してください");
       return;
+    }
+
+    if (!internalPassword) {
+      alert("社内パスワードを入力してください");
+      return;
+    }
+    if (REQUIRED_PASSWORD && internalPassword !== REQUIRED_PASSWORD) {
+      alert("社内パスワードが正しくありません");
+      return;
+    }
+
+    if (mismatch) {
+      alert("プロフィールのウォレットと接続中のウォレットが一致しません");
+      return;
+    }
+
+    if (!isConnected) {
+      try {
+        await ensureConnected();
+      } catch (err) {
+        alert("ウォレットへの接続に失敗しました。MetaMaskを確認してください。");
+        console.warn("connect failed", err);
+        return;
+      }
     }
 
     if (!to || !amount) {
@@ -50,6 +149,7 @@ export default function OfferSendPage() {
       });
 
       setTxHash(hash);
+      await disconnect(); // 送信後は明示的に切断する
     } catch (error: unknown) {
       // unknown を受け取り、型ガードで Error を絞る
       if (error instanceof Error) {
@@ -74,6 +174,28 @@ export default function OfferSendPage() {
         {!isConnected && (
           <p className="text-red-500 font-semibold">
             ウォレットに接続してください。
+          </p>
+        )}
+
+        {hasEthereum === false && (
+          <p className="text-red-500 font-semibold">
+            MetaMaskが見つかりません。インストールしてから再度お試しください。
+          </p>
+        )}
+
+        {profileAddress && (
+          <p className="text-sm text-gray-700">
+            プロフィールのウォレット: {profileAddress}
+          </p>
+        )}
+        {myAddress && (
+          <p className="text-sm text-gray-700">
+            接続中のウォレット: {myAddress}
+          </p>
+        )}
+        {mismatch && (
+          <p className="text-red-600 font-semibold">
+            プロフィールのウォレットと接続中のウォレットが一致しません。MetaMaskでアカウントを切り替えてください。
           </p>
         )}
 
@@ -102,6 +224,11 @@ export default function OfferSendPage() {
                 className="w-full p-3 border rounded-xl bg-gray-50"
                 placeholder="1000"
               />
+              {isLargeAmount && (
+                <p className="text-red-600 text-sm mt-2">
+                  10,000 JPYC以上の送金です。社内承認を得ているか確認してください。
+                </p>
+              )}
             </div>
 
             {/* メッセージ */}
@@ -116,12 +243,35 @@ export default function OfferSendPage() {
               />
             </div>
 
+            {/* 社内パスワード */}
+            <div>
+              <label className="font-semibold mb-2 block">🔒 社内パスワード</label>
+              <input
+                type="password"
+                value={internalPassword}
+                onChange={(e) => setInternalPassword(e.target.value)}
+                className="w-full p-3 border rounded-xl bg-gray-50"
+                placeholder="社内パスワードを入力"
+              />
+              {REQUIRED_PASSWORD === undefined && (
+                <p className="text-xs text-gray-500 mt-1">
+                  NEXT_PUBLIC_INTERNAL_PASSWORD が設定されていないため、空以外の入力で通過します。
+                </p>
+              )}
+            </div>
+
             <button
               onClick={sendOffer}
-              disabled={isPending}
+              disabled={
+                isPending ||
+                isConnecting ||
+                mismatch ||
+                !isConnected ||
+                hasEthereum === false
+              }
               className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl text-lg font-semibold hover:opacity-90 transition"
             >
-              {isPending ? "送信中..." : "オファーを送る"}
+              {isPending || isConnecting ? "送信中..." : "オファーを送る"}
             </button>
 
             {/* 結果 */}

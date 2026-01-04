@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabaseClient";
-import Link from "next/link";
 import BackToDashboard from "@/components/BackToDashboard";
 
 type CompanyProfile = {
