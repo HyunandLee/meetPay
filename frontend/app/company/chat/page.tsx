@@ -9,7 +9,6 @@ import {
   fetchRecentInterviewees,
   fetchThreadStudentWallet,
   listCompanyThreads,
-  recordPayoutNotice,
   sendMessage,
   startOfferThread,
 } from "@/lib/chatApi";
@@ -51,7 +50,6 @@ export default function CompanyChatPage() {
 
   const [newMessage, setNewMessage] = useState("");
   const [interviewNote, setInterviewNote] = useState("");
-  const [payoutForm, setPayoutForm] = useState({ txHash: "", amount: "" });
   const selectedThread = useMemo(
     () => threads.find((t) => t.id === selectedId) ?? null,
     [threads, selectedId]
@@ -167,23 +165,26 @@ export default function CompanyChatPage() {
       threadId: selectedId,
       notes: interviewNote,
     });
+    // ステータス更新後にチャットへ完了メモを残す
+    if (interviewNote.trim()) {
+      await sendMessage({
+        threadId: selectedId,
+        sender: "company",
+        type: "note",
+        body: `面談完了: ${interviewNote}`,
+      });
+    } else {
+      await sendMessage({
+        threadId: selectedId,
+        sender: "company",
+        type: "note",
+        body: "面談を完了しました",
+      });
+    }
+    const msgs = await fetchMessages(selectedId);
+    setMessages(msgs);
     if (companyId) await loadThreads(companyId);
     setInterviewNote("");
-  }
-
-  async function handleRecordPayout() {
-    if (!selectedId) return;
-    if (!payoutForm.txHash) {
-      alert("トランザクションハッシュを入力してください");
-      return;
-    }
-    await recordPayoutNotice({
-      threadId: selectedId,
-      txHash: payoutForm.txHash,
-      amount: payoutForm.amount ? Number(payoutForm.amount) : null,
-    });
-    if (companyId) await loadThreads(companyId);
-    setPayoutForm({ txHash: "", amount: "" });
   }
 
   async function applyRecentWallet(threadId: string) {
@@ -195,9 +196,18 @@ export default function CompanyChatPage() {
     window.location.href = `/company/offer-send?thread=${threadId}`;
   }
 
+  function goToOfferSendWithSelected() {
+    if (!selectedThread) return;
+    const wallet = selectedThread.student?.wallet_address ?? "";
+    const params = new URLSearchParams();
+    if (wallet) params.set("to", wallet);
+    params.set("thread", selectedThread.id);
+    window.location.href = `/company/offer-send?${params.toString()}`;
+  }
+
   return (
     <main className="min-h-screen bg-gray-100 p-6 text-gray-900">
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6">
         <BackToDashboard />
 
         <div className="flex items-center justify-between gap-4">
@@ -289,9 +299,9 @@ export default function CompanyChatPage() {
           </button>
         </div>
 
-        <div className="grid md:grid-cols-[320px_1fr] gap-4">
+        <div className="grid md:grid-cols-[360px_1fr] gap-4">
           {/* Thread list */}
-          <div className="bg-white rounded-xl shadow p-4 space-y-3 h-[70vh] overflow-y-auto">
+          <div className="bg-white rounded-xl shadow p-4 space-y-3 h-[82vh] overflow-y-auto">
             <h2 className="text-lg font-semibold">スレッド</h2>
             {loadingThreads && <p className="text-gray-500">読み込み中...</p>}
             {threads.map((t) => (
@@ -319,7 +329,7 @@ export default function CompanyChatPage() {
           </div>
 
           {/* Chat detail */}
-          <div className="bg-white rounded-xl shadow p-4 flex flex-col h-[70vh]">
+          <div className="bg-white rounded-xl shadow p-4 flex flex-col h-[82vh]">
             {selectedThread ? (
               <>
                 <div className="flex items-center justify-between">
@@ -346,8 +356,8 @@ export default function CompanyChatPage() {
                   <textarea
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    rows={2}
-                    className="flex-1 border rounded-lg p-2 bg-gray-50"
+                    rows={3}
+                    className="flex-1 border rounded-lg p-2 bg-gray-50 min-h-[96px]"
                     placeholder="メッセージを入力"
                   />
                   <button
@@ -358,13 +368,13 @@ export default function CompanyChatPage() {
                   </button>
                 </div>
 
-                <div className="mt-4 grid md:grid-cols-3 gap-3">
-                  <div className="md:col-span-1">
+                <div className="mt-4 grid md:grid-cols-[1.5fr_1fr] gap-4 items-start">
+                  <div>
                     <label className="text-sm text-gray-700 block">面談完了メモ</label>
                     <textarea
                       value={interviewNote}
                       onChange={(e) => setInterviewNote(e.target.value)}
-                      rows={2}
+                      rows={3}
                       className="w-full border rounded-lg p-2 bg-gray-50"
                     />
                     <button
@@ -379,27 +389,16 @@ export default function CompanyChatPage() {
                     </button>
                   </div>
 
-                  <div className="md:col-span-2 space-y-2">
-                    <label className="text-sm text-gray-700 block">支払い記録</label>
-                    <div className="grid md:grid-cols-2 gap-2">
-                      <input
-                        value={payoutForm.txHash}
-                        onChange={(e) => setPayoutForm((s) => ({ ...s, txHash: e.target.value }))}
-                        className="border rounded-lg p-2 bg-gray-50"
-                        placeholder="tx hash"
-                      />
-                      <input
-                        value={payoutForm.amount}
-                        onChange={(e) => setPayoutForm((s) => ({ ...s, amount: e.target.value }))}
-                        className="border rounded-lg p-2 bg-gray-50"
-                        placeholder="金額（任意）"
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <label className="text-sm text-gray-700 block">送金ページへ</label>
+                    <p className="text-xs text-gray-600">
+                      学生ウォレットが登録済みなら事前入力された状態で /company/offer-send に移動します。
+                    </p>
                     <button
-                      onClick={handleRecordPayout}
-                      className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:opacity-90"
+                      onClick={goToOfferSendWithSelected}
+                      className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-3 py-3 rounded-lg hover:opacity-90"
                     >
-                      支払い完了として記録
+                      送金ページを開く
                     </button>
                   </div>
                 </div>

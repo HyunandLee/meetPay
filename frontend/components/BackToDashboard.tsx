@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { supabase } from "@/utils/supabaseClient";
 
 type BackToDashboardProps = {
   href?: string;
@@ -10,8 +12,22 @@ type BackToDashboardProps = {
 
 export default function BackToDashboard({ href }: BackToDashboardProps) {
   const pathname = usePathname();
-  const isStudent = pathname?.startsWith("/student");
-  const target = href ?? (isStudent ? "/student/dashboard" : "/company/dashboard");
+  const [roleTarget, setRoleTarget] = useState<string | null>(null);
+  const isStudentPath = pathname?.startsWith("/student");
+
+  useEffect(() => {
+    // When the user is logged in, prefer the dashboard that matches their role
+    supabase.auth.getUser().then(({ data }) => {
+      const role = data.user?.user_metadata?.role as "student" | "company" | undefined;
+      if (role === "student") setRoleTarget("/student/dashboard");
+      else if (role === "company") setRoleTarget("/company/dashboard");
+    });
+  }, []);
+
+  const target =
+    href ??
+    roleTarget ??
+    (isStudentPath ? "/student/dashboard" : "/company/dashboard");
 
   return (
     <Link
