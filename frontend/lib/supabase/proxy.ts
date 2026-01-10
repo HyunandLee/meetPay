@@ -1,12 +1,14 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { Database } from "./database.types";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request
   })
+  console.log('supabaseResponse:', supabaseResponse);
 
-  const supabase = createServerClient(
+  const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
@@ -25,12 +27,25 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  const { data } = await supabase.auth.getClaims()
-  // console.log('data:', data);
-
-  const user = data?.claims?.user;
   const url = request.nextUrl.clone();
-  if (!user) {
+  try {
+    const { data } = await supabase.auth.getClaims()
+    // console.log('data:', data);
+
+    const user = data?.claims?.user;
+    if (!user) {
+      if (url.pathname.startsWith("/company")) {
+        url.pathname = "/company/login";
+      } else if (url.pathname.startsWith("/student")) {
+        url.pathname = "/student/login";
+      }
+      return NextResponse.redirect(url);
+    }
+    return supabaseResponse;
+  } catch (error) {
+    // delete cookies
+    await supabase.auth.signOut();
+
     if (url.pathname.startsWith("/company")) {
       url.pathname = "/company/login";
     } else if (url.pathname.startsWith("/student")) {
@@ -38,5 +53,4 @@ export async function updateSession(request: NextRequest) {
     }
     return NextResponse.redirect(url);
   }
-  return supabaseResponse;
 }
