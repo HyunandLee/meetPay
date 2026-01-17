@@ -173,39 +173,41 @@ export default function StudentDashboard() {
           🎓 {profile.name} さん
         </h1>
 
-        {/* ナビゲーションボタン */}
-        <DashboardButton
-          label="🎓 自分のプロフィールを見る"
-          href="/student/me"
-          color="from-blue-500 to-blue-700"
-        />
+        {/* ---- メニューエリア ---- */}
+        <div className="mt-10 grid grid-cols-1 gap-4">
+          <DashboardButton
+            label="🎓 自分のプロフィールを見る"
+            href="/student/me"
+            color="from-blue-500 to-blue-700"
+          />
 
-        <DashboardButton
-          label="✏️ プロフィールを編集"
-          href="/student/profile"
-          color="from-purple-500 to-indigo-600"
-        />
+          <DashboardButton
+            label="✏️ プロフィールを編集"
+            href="/student/profile"
+            color="from-purple-500 to-indigo-600"
+          />
 
-        <DashboardButton
-          label="💌 企業からのオファーを見る"
-          href="/student/offers"
-          color="from-pink-500 to-red-500"
-        />
+          <DashboardButton
+            label="💌 企業からのオファーを見る"
+            href="/student/offers"
+            color="from-pink-500 to-red-500"
+          />
 
-        <DashboardButton
-          label="💬 チャットへ"
-          href="/student/chat"
-          color="from-orange-500 to-yellow-500"
-        />
+          <DashboardButton
+            label="💬 チャットへ"
+            href="/student/chat"
+            color="from-orange-500 to-yellow-500"
+          />
 
-        <DashboardButton
-          label="💼 企業を探す"
-          href="/company/search"   // 企業の検索ページ（後で作る）
-          color="from-green-500 to-emerald-600"
-        />
+          <DashboardButton
+            label="💼 企業を探す"
+            href="/company/search" // 企業の検索ページ（後で作る）
+            color="from-green-500 to-emerald-600"
+          />
+        </div>
 
         {/* プロフィール概要カード */}
-        <div className="bg-white shadow-xl rounded-xl p-6 mb-8">
+        <div className="bg-white shadow-xl rounded-xl p-6 mb-8 mt-10">
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-gray-900">
             📄 自分のプロフィール概要
           </h2>
@@ -215,6 +217,8 @@ export default function StudentDashboard() {
           <InfoRow label="学年" value={profile.grade} />
           <InfoRow label="スキル" value={profile.skills} />
         </div>
+
+        <SectionBlock title="📝 自己紹介" value={profile.about} />
 
       </div>
     </main>
@@ -240,12 +244,22 @@ function DashboardButton({
   color: string;
 }) {
   return (
-    <Link href={href}>
-      <div
-        className={`w-full mt-4 p-4 rounded-xl shadow text-white text-lg font-semibold text-center cursor-pointer bg-gradient-to-r ${color} hover:opacity-90 transition`}
-      >
-        {label}
-      </div>
+    <Link
+      href={href}
+      className={`block text-center py-4 rounded-xl text-white font-semibold text-lg shadow bg-gradient-to-r ${color} hover:opacity-90 transition`}
+    >
+      {label}
     </Link>
+  );
+}
+
+function SectionBlock({ title, value }: { title: string; value: string }) {
+  return (
+    <div className="bg-white shadow-md rounded-xl p-6 mb-8">
+      <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-gray-900">{title}</h2>
+      <p className="text-gray-700 whitespace-pre-line">
+        {value || "（未入力）"}
+      </p>
+    </div>
   );
 }

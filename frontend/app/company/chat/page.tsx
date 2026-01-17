@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import BackToDashboard from "@/components/BackToDashboard";
 import {
   completeInterview,
@@ -29,6 +30,8 @@ type RecentOption = {
 };
 
 export default function CompanyChatPage() {
+  const searchParams = useSearchParams();
+  const targetStudentId = searchParams.get("studentId") ?? searchParams.get("student");
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [threads, setThreads] = useState<Thread[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -39,6 +42,7 @@ export default function CompanyChatPage() {
 
   const [students, setStudents] = useState<StudentOption[]>([]);
   const [recentInterviewees, setRecentInterviewees] = useState<RecentOption[]>([]);
+  const [appliedTarget, setAppliedTarget] = useState(false);
   const [newThread, setNewThread] = useState({
     studentId: "",
     amount: "",
@@ -76,6 +80,16 @@ export default function CompanyChatPage() {
   }, []);
 
   useEffect(() => {
+    if (!targetStudentId || appliedTarget || loadingThreads) return;
+    const matched = threads.find((t) => t.student_id === targetStudentId);
+    setNewThread((s) => ({ ...s, studentId: targetStudentId }));
+    if (matched) {
+      setSelectedId(matched.id);
+    }
+    setAppliedTarget(true);
+  }, [appliedTarget, loadingThreads, targetStudentId, threads]);
+
+  useEffect(() => {
     if (!selectedId) return;
     setLoadingMessages(true);
     fetchMessages(selectedId)
@@ -100,7 +114,24 @@ export default function CompanyChatPage() {
       console.warn("failed to load students", error);
       return;
     }
-    setStudents((data ?? []) as StudentOption[]);
+    const base = (data ?? []) as StudentOption[];
+    if (targetStudentId && !base.some((s) => s.id === targetStudentId)) {
+      const { data: extra, error: extraError } = await supabase
+        .from("student_profiles")
+        .select("id, name, wallet_address")
+        .eq("id", targetStudentId)
+        .maybeSingle();
+      if (extraError) {
+        console.warn("failed to load target student", extraError);
+        setStudents(base);
+        return;
+      }
+      if (extra) {
+        setStudents([extra as StudentOption, ...base]);
+        return;
+      }
+    }
+    setStudents(base);
   }
 
   async function loadRecent(id: string) {

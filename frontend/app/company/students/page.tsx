@@ -77,6 +77,9 @@ export default function StudentSearchPage() {
 }
 
 function StudentCard({ student }: { student: Student }) {
+  const profileHref = `/students/me?id=${encodeURIComponent(student.id)}`;
+  const chatHref = `/company/chat?studentId=${encodeURIComponent(student.id)}`;
+
   return (
     <div className="bg-white p-6 shadow rounded-xl">
       <h2 className="text-xl font-bold">{student.name}</h2>
@@ -89,15 +92,28 @@ function StudentCard({ student }: { student: Student }) {
         🛠️ スキル：{student.skills ?? "未登録"}
       </p>
 
-      {/* オファー */}
-      {student.wallet_address && (
+      <div className="mt-4 flex flex-wrap gap-2">
         <Link
-          href={`/company/offer-send?to=${student.wallet_address}`}
-          className="inline-block mt-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
+          href={profileHref}
+          className="inline-block bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
         >
-          🎁 オファーを送る
+          プロフィールを見る
         </Link>
-      )}
+        <Link
+          href={chatHref}
+          className="inline-block bg-gradient-to-r from-orange-500 to-amber-500 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
+        >
+          チャットする
+        </Link>
+        {student.wallet_address && (
+          <Link
+            href={`/company/offer-send?to=${student.wallet_address}`}
+            className="inline-block bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
+          >
+            🎁 オファーを送る
+          </Link>
+        )}
+      </div>
     </div>
   );
 }
