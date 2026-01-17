@@ -51,11 +51,16 @@ export default function CompanyProfilePage() {
       } = await supabase.auth.getUser();
       if (!user) return setLoading(false);
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("company_profiles")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .order("created_at", { ascending: false })
+        .maybeSingle();
+
+      if (error) {
+        console.warn("failed to load company profile", error);
+      }
 
       if (data) {
         setProfileId(data.id);
@@ -125,7 +130,7 @@ export default function CompanyProfilePage() {
       <div className="max-w-3xl mx-auto">
 
         {/* ダッシュボードへ戻る */}
-        <BackToDashboard />
+        <BackToDashboard href="/company/dashboard" />
 
         {/* タイトル */}
         <h1 className="text-3xl font-bold mb-6 flex items-center gap-2 text-gray-900">

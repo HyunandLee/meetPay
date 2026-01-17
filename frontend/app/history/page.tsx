@@ -160,7 +160,7 @@ export default function HistoryPage() {
                   <p>
                     Tx:{" "}
                     <a
-                      href={`https://www.oklink.com/amoy/tx/${log.txHash}`}
+                      href={`https://amoy.polygonscan.com/tx/${log.txHash}`}
                       target="_blank"
                     >
                       {log.txHash}

@@ -4,26 +4,50 @@ import { useEffect, useState } from "react";
 import { useConnections } from "wagmi";
 import BackToDashboard from "@/components/BackToDashboard";
 import { getTransferLogsByAddress, type OfferLog } from "@/lib/getTransferLogs";
+import { supabase } from "@/utils/supabaseClient";
 
 export default function StudentOffersPage() {
   const [logs, setLogs] = useState<OfferLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [profileAddress, setProfileAddress] = useState<string | null>(null);
 
   const connections = useConnections();
   const connection = connections[0];
   const myAddress = connection?.accounts?.[0];
 
   useEffect(() => {
+    async function loadProfileWallet() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data, error } = await supabase
+        .from("student_profiles")
+        .select("wallet_address")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .maybeSingle();
+      if (error) {
+        console.warn("failed to load student wallet", error);
+        return;
+      }
+      if (data?.wallet_address) setProfileAddress(data.wallet_address);
+    }
+    loadProfileWallet();
+  }, []);
+
+  useEffect(() => {
     async function load() {
-      if (!myAddress) {
+      const target = myAddress ?? profileAddress;
+      if (!target) {
         setLoading(false);
         return;
       }
 
-      const history = await getTransferLogsByAddress(myAddress);
+      const history = await getTransferLogsByAddress(target);
 
       const received = history.filter(
-        (log) => log.to.toLowerCase() === myAddress.toLowerCase()
+        (log) => log.to.toLowerCase() === target.toLowerCase()
       );
 
       received.sort((a, b) => b.timestamp - a.timestamp);
@@ -33,21 +57,24 @@ export default function StudentOffersPage() {
     }
 
     load();
-  }, [myAddress]);
+  }, [myAddress, profileAddress]);
 
   return (
     <main className="min-h-screen bg-gray-100 p-6 text-gray-900">
       <div className="max-w-3xl mx-auto">
 
         {/* 戻るボタン */}
-        <BackToDashboard />
+        <BackToDashboard href="/student/dashboard" />
 
         <h1 className="text-3xl font-bold mb-6 flex items-center gap-2">
           🎁 企業からのオファー履歴
         </h1>
 
-        {!myAddress && (
-          <p className="text-red-500">ウォレットを接続してください。</p>
+        <p className="text-gray-600 text-sm mb-2">
+          参照アドレス: {myAddress ?? profileAddress ?? "未設定（接続またはプロフィール登録をしてください）"}
+        </p>
+        {!myAddress && !profileAddress && (
+          <p className="text-red-500">ウォレットを接続するか、プロフィールにウォレットを登録してください。</p>
         )}
 
         {loading && (
@@ -83,7 +110,7 @@ export default function StudentOffersPage() {
               </p>
 
               <a
-                href={`https://www.oklink.com/amoy/tx/${log.hash}`}
+                href={`https://amoy.polygonscan.com/tx/${log.hash}`}
                 target="_blank"
                 className="text-blue-600 underline mt-1 inline-block"
               >

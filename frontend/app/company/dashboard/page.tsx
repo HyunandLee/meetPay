@@ -22,33 +22,143 @@ type CompanyProfile = {
 export default function CompanyDashboard() {
   const [profile, setProfile] = useState<CompanyProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const [authReady, setAuthReady] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    async function load() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    let isMounted = true;
 
-      if (!user) {
+    async function resolveSession() {
+      setError(null);
+      setAuthError(null);
+
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (!isMounted) return;
+      if (sessionError) {
+        setAuthError("ログイン情報の取得に失敗しました。通信状況を確認して再読み込みしてください。");
+        setAuthReady(true);
         setLoading(false);
         return;
       }
 
-      const { data } = await supabase
-        .from("company_profiles")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
+      const sessionUser = sessionData.session?.user ?? null;
+      if (sessionUser) {
+        setUserId(sessionUser.id);
+        setAuthReady(true);
+        return;
+      }
 
-      if (data) setProfile(data);
-      setLoading(false);
+      const { data, error } = await supabase.auth.getUser();
+      if (!isMounted) return;
+      if (error) {
+        setAuthError("ログイン情報の取得に失敗しました。通信状況を確認して再読み込みしてください。");
+        setAuthReady(true);
+        setLoading(false);
+        return;
+      }
+
+      setUserId(data.user?.id ?? null);
+      setAuthReady(true);
     }
 
-    load();
-  }, []);
+    resolveSession();
+
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!isMounted) return;
+      setUserId(session?.user?.id ?? null);
+      setAuthError(null);
+      setAuthReady(true);
+    });
+
+    return () => {
+      isMounted = false;
+      data.subscription.unsubscribe();
+    };
+  }, [retryCount]);
+
+  useEffect(() => {
+    if (!authReady || authError) return;
+
+    async function loadProfile() {
+      setError(null);
+      setLoading(true);
+
+      if (!userId) {
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("company_profiles")
+          .select("*")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .maybeSingle();
+
+        if (error) {
+          console.warn("failed to load company profile", error);
+          setError("企業プロフィールの取得に失敗しました。通信状況を確認し、再度お試しください。");
+          setLoading(false);
+          return;
+        }
+
+        if (data) {
+          setProfile(data);
+        } else {
+          setProfile(null); // データがない場合のみ未登録として扱う
+        }
+        setLoading(false);
+      } catch (err) {
+        console.warn("unexpected error while loading company profile", err);
+        setError("企業プロフィールの取得中にエラーが発生しました。再読み込みしてください。");
+        setLoading(false);
+      }
+    }
+
+    loadProfile();
+  }, [authError, authReady, retryCount, userId]);
 
   if (loading)
     return <p className="text-center mt-20 text-gray-500">Loading...</p>;
+
+  const displayError = authError ?? error;
+
+  if (displayError)
+    return (
+      <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
+        <div className="bg-white p-8 shadow-xl rounded-xl text-center space-y-4">
+          <h1 className="text-2xl font-bold">読み込みに失敗しました</h1>
+          <p className="text-gray-600">{displayError}</p>
+          <button
+            onClick={() => setRetryCount((n) => n + 1)}
+            className="inline-block bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-3 rounded-lg hover:opacity-90 transition"
+          >
+            再読み込みする
+          </button>
+        </div>
+      </div>
+    );
+
+  if (authReady && !userId && !authError)
+    return (
+      <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
+        <div className="bg-white p-8 shadow-xl rounded-xl text-center space-y-4">
+          <h1 className="text-2xl font-bold">ログインが必要です</h1>
+          <p className="text-gray-600">セッションが切れている可能性があります。</p>
+          <Link
+            href="/company/login"
+            className="inline-block bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-3 rounded-lg hover:opacity-90 transition"
+          >
+            ログインへ
+          </Link>
+        </div>
+      </div>
+    );
 
   if (!profile)
     return (

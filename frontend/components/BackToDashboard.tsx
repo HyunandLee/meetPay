@@ -24,10 +24,13 @@ export default function BackToDashboard({ href }: BackToDashboardProps) {
     });
   }, []);
 
+  // If we're already under /company, prefer company dashboard even before auth is ready.
+  const isCompanyPath = pathname?.startsWith("/company");
+
   const target =
     href ??
     roleTarget ??
-    (isStudentPath ? "/student/dashboard" : "/company/dashboard");
+    (isCompanyPath ? "/company/dashboard" : isStudentPath ? "/student/dashboard" : "/company/dashboard");
 
   return (
     <Link

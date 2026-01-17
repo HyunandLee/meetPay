@@ -208,7 +208,7 @@ export default function CompanyChatPage() {
   return (
     <main className="min-h-screen bg-gray-100 p-6 text-gray-900">
       <div className="max-w-7xl mx-auto space-y-6">
-        <BackToDashboard />
+        <BackToDashboard href="/company/dashboard" />
 
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-3xl font-bold flex items-center gap-2">💬 チャット（企業）</h1>
@@ -301,7 +301,7 @@ export default function CompanyChatPage() {
 
         <div className="grid md:grid-cols-[360px_1fr] gap-4">
           {/* Thread list */}
-          <div className="bg-white rounded-xl shadow p-4 space-y-3 h-[82vh] overflow-y-auto">
+          <div className="bg-white rounded-xl shadow p-4 space-y-3 h-[90vh] overflow-y-auto">
             <h2 className="text-lg font-semibold">スレッド</h2>
             {loadingThreads && <p className="text-gray-500">読み込み中...</p>}
             {threads.map((t) => (
@@ -329,7 +329,7 @@ export default function CompanyChatPage() {
           </div>
 
           {/* Chat detail */}
-          <div className="bg-white rounded-xl shadow p-4 flex flex-col h-[82vh]">
+          <div className="bg-white rounded-xl shadow p-4 flex flex-col h-[90vh]">
             {selectedThread ? (
               <>
                 <div className="flex items-center justify-between">
@@ -342,7 +342,7 @@ export default function CompanyChatPage() {
                   <StatusBadge status={selectedThread.status} />
                 </div>
 
-                <div className="flex-1 border rounded-lg p-3 mt-3 overflow-y-auto space-y-2 bg-gray-50">
+                <div className="flex-1 border rounded-lg p-3 mt-3 overflow-y-auto space-y-4 bg-gray-50">
                   {loadingMessages && <p className="text-gray-500">読み込み中...</p>}
                   {messages.map((m) => (
                     <MessageBubble key={m.id} message={m} />
@@ -368,7 +368,7 @@ export default function CompanyChatPage() {
                   </button>
                 </div>
 
-                <div className="mt-4 grid md:grid-cols-[1.5fr_1fr] gap-4 items-start">
+                <div className="mt-4 grid md:grid-cols-[1.5fr_1fr] gap-4 items-end">
                   <div>
                     <label className="text-sm text-gray-700 block">面談完了メモ</label>
                     <textarea
@@ -383,20 +383,22 @@ export default function CompanyChatPage() {
                         selectedThread.status !== "accepted" &&
                         selectedThread.status !== "interview_done"
                       }
-                      className="mt-2 w-full bg-emerald-600 text-white px-3 py-2 rounded-lg hover:opacity-90 disabled:opacity-60"
+                      className="mt-2 w-full bg-emerald-600 text-white px-3 py-3 rounded-lg hover:opacity-90 disabled:opacity-60"
                     >
                       面談完了にする
                     </button>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm text-gray-700 block">送金ページへ</label>
-                    <p className="text-xs text-gray-600">
-                      学生ウォレットが登録済みなら事前入力された状態で /company/offer-send に移動します。
-                    </p>
+                  <div className="space-y-2 flex flex-col h-full justify-end">
+                    <div>
+                      <label className="text-sm text-gray-700 block">送金ページへ</label>
+                      <p className="text-xs text-gray-600">
+                        学生ウォレットが登録済みなら事前入力された状態で /company/offer-send に移動します。
+                      </p>
+                    </div>
                     <button
                       onClick={goToOfferSendWithSelected}
-                      className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-3 py-3 rounded-lg hover:opacity-90"
+                      className="w-full bg-emerald-600 text-white px-3 py-3 rounded-lg hover:opacity-90"
                     >
                       送金ページを開く
                     </button>

@@ -21,7 +21,7 @@ export async function fetchCompanyProfileId(): Promise<string | null> {
     .from("company_profiles")
     .select("id")
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
   if (error) {
     console.warn("failed to fetch company profile id", error);
     return null;
@@ -35,7 +35,7 @@ export async function fetchStudentProfileId(): Promise<string | null> {
     .from("student_profiles")
     .select("id")
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
   if (error) {
     console.warn("failed to fetch student profile id", error);
     return null;

@@ -46,7 +46,7 @@ export default function StudentSearchPage() {
     <main className="min-h-screen bg-gray-100 p-6 text-gray-900">
       <div className="max-w-3xl mx-auto">
 
-        <BackToDashboard />
+        <BackToDashboard href="/company/dashboard" />
 
         <h1 className="text-3xl font-bold mb-6 flex items-center gap-2">
           🔍 学生を探す

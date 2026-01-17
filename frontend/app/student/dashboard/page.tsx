@@ -19,33 +19,133 @@ type StudentProfile = {
 export default function StudentDashboard() {
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
-    async function load() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    let isMounted = true;
 
-      if (!user) {
+    async function resolveSession() {
+      setError(null);
+      setAuthError(null);
+
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (!isMounted) return;
+      if (sessionError) {
+        setAuthError("ログイン情報の取得に失敗しました。通信状況を確認して再読み込みしてください。");
+        setAuthReady(true);
         setLoading(false);
         return;
       }
 
-      const { data } = await supabase
+      const sessionUser = sessionData.session?.user ?? null;
+      if (sessionUser) {
+        setUserId(sessionUser.id);
+        setAuthReady(true);
+        return;
+      }
+
+      const { data, error } = await supabase.auth.getUser();
+      if (!isMounted) return;
+      if (error) {
+        setAuthError("ログイン情報の取得に失敗しました。通信状況を確認して再読み込みしてください。");
+        setAuthReady(true);
+        setLoading(false);
+        return;
+      }
+
+      setUserId(data.user?.id ?? null);
+      setAuthReady(true);
+    }
+
+    resolveSession();
+
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!isMounted) return;
+      setUserId(session?.user?.id ?? null);
+      setAuthError(null);
+      setAuthReady(true);
+    });
+
+    return () => {
+      isMounted = false;
+      data.subscription.unsubscribe();
+    };
+  }, [retryCount]);
+
+  useEffect(() => {
+    if (!authReady || authError) return;
+
+    async function loadProfile() {
+      setLoading(true);
+      setError(null);
+
+      if (!userId) {
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
         .from("student_profiles")
         .select("*")
-        .eq("user_id", user.id)
-        .single();
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .maybeSingle();
 
-      if (data) setProfile(data);
+      if (error) {
+        console.warn("failed to load student profile", error);
+        setError("学生プロフィールの取得に失敗しました。通信状況を確認して再読み込みしてください。");
+        setLoading(false);
+        return;
+      }
+
+      setProfile(data ?? null);
       setLoading(false);
     }
 
-    load();
-  }, []);
+    loadProfile();
+  }, [authError, authReady, retryCount, userId]);
 
   if (loading)
     return <p className="text-center mt-20 text-gray-500">Loading...</p>;
+
+  const displayError = authError ?? error;
+
+  if (displayError)
+    return (
+      <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
+        <div className="bg-white p-8 shadow-xl rounded-xl text-center space-y-4">
+          <h1 className="text-2xl font-bold">読み込みに失敗しました</h1>
+          <p className="text-gray-600">{displayError}</p>
+          <button
+            onClick={() => setRetryCount((n) => n + 1)}
+            className="inline-block bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-3 rounded-lg hover:opacity-90 transition"
+          >
+            再読み込みする
+          </button>
+        </div>
+      </div>
+    );
+
+  if (authReady && !userId && !authError)
+    return (
+      <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
+        <div className="bg-white p-8 shadow-xl rounded-xl text-center space-y-4">
+          <h1 className="text-2xl font-bold">ログインが必要です</h1>
+          <p className="text-gray-600">セッションが切れている可能性があります。</p>
+          <Link
+            href="/student/login"
+            className="inline-block bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-3 rounded-lg hover:opacity-90 transition"
+          >
+            ログインへ
+          </Link>
+        </div>
+      </div>
+    );
 
   if (!profile)
     return (

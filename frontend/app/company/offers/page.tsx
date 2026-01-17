@@ -77,7 +77,7 @@ export default function CompanyOffers() {
       <div className="max-w-3xl mx-auto">
 
         {/* 共通：ダッシュボードに戻る */}
-        <BackToDashboard />
+        <BackToDashboard href="/company/dashboard" />
 
         <h1 className="text-3xl font-bold mb-8 flex items-center gap-2">
           💸 企業オファー履歴（tJPYC）
@@ -110,7 +110,7 @@ export default function CompanyOffers() {
               </div>
 
               <a
-                href={`https://www.oklink.com/amoy/tx/${log.hash}`}
+                href={`https://amoy.polygonscan.com/tx/${log.hash}`}
                 target="_blank"
                 className="text-blue-600 underline mt-3 inline-block"
               >

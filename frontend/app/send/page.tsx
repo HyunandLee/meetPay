@@ -111,7 +111,7 @@ export default function SendPage() {
             <p style={{ marginTop: 20 }}>
               Tx Hash:{" "}
               <a
-                href={`https://www.oklink.com/amoy/tx/${txHash}`}
+                href={`https://amoy.polygonscan.com/tx/${txHash}`}
                 target="_blank"
                 style={{ color: "#3b82f6" }}
               >

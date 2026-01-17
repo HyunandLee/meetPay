@@ -82,7 +82,7 @@ export default function StudentChatPage() {
   return (
     <main className="min-h-screen bg-gray-100 p-6 text-gray-900">
       <div className="max-w-6xl mx-auto space-y-6">
-        <BackToDashboard />
+        <BackToDashboard href="/student/dashboard" />
 
         <h1 className="text-3xl font-bold flex items-center gap-2">💬 チャット（学生）</h1>
 

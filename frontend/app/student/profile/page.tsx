@@ -47,11 +47,16 @@ export default function StudentProfilePage() {
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("student_profiles")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .order("created_at", { ascending: false })
+        .maybeSingle();
+
+      if (error) {
+        console.warn("failed to load student profile", error);
+      }
 
       if (data) {
         setForm({
@@ -99,7 +104,7 @@ export default function StudentProfilePage() {
     <main className="min-h-screen bg-gray-100 p-6 text-gray-900">
       <div className="max-w-2xl mx-auto">
 
-        <BackToDashboard />
+        <BackToDashboard href="/student/dashboard" />
 
         <h1 className="text-3xl font-bold mb-6 flex items-center gap-2">
           🎓 学生プロフィール編集
