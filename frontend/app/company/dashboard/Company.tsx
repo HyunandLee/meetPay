@@ -41,7 +41,7 @@ export function Company() {
     }
     setIsLoading(true);
     getCompany().then((data) => {
-      setCompany(data as Company);
+      setCompany(data as unknown as Company);
       setTimeout(() => {
         setIsLoading(false);
       }, 1000);
@@ -121,7 +121,7 @@ function CompanyInfo({ company }: { company: Company }) {
 
         {/* プロフィール編集 */}
         <DashboardButton
-          href="/company/profile"
+          href="/company/edit"
           label="✏️ プロフィールを編集"
           color="from-purple-600 to-indigo-600"
         />

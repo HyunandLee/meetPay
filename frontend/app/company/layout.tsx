@@ -1,6 +1,8 @@
-import LogoutButton from "@/components/LogoutButton";
+import CompanyClientLayout from "@/components/company/CompanyLayoutClient";
 import { getServerSupabase } from "@/lib/supabase/server";
-import Link from "next/link";
+import { User } from "@supabase/supabase-js";
+import { AdminModeProvider } from "@/components/company/AdminModeContext";
+import { WalletModalProvider } from "@/components/company/WalletModalContext";
 
 export interface LayoutProps {
   children: React.ReactNode;
@@ -13,16 +15,12 @@ export default async function CompanyLayout({ children }: LayoutProps) {
   } = await supabase.auth.getUser();
 
   return (
-    <main>
-      <header className="flex justify-between items-center p-4">
-        <h1 className="text-2xl font-bold">Company Layout</h1>
-        {
-          user 
-          ? <LogoutButton /> 
-          : <Link href="/company/login" className="bg-blue-500 text-white px-4 py-2 rounded-md">ログイン</Link>
-        }
-      </header>
-      {children}
-    </main>
+    <AdminModeProvider>
+      <WalletModalProvider>
+        <CompanyClientLayout user={user as User}>
+          {children}
+        </CompanyClientLayout>
+      </WalletModalProvider>
+    </AdminModeProvider>
   )
 }
