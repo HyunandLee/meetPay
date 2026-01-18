@@ -58,29 +58,22 @@ export function Company() {
         )
       }
       {
-        !isLoading && (
+        !isLoading && isConnected && (
           <>
-            <ConnectWallet>
-              <div data-wallet="connected">
-                {
-                  company && (
-                    <>
-                      <CompanyInfo company={company} />
-                    </>
-                  )
-                }
-                {
-                  !company && (
-                    <div>
-                      <Link href="/company/create" className="bg-blue-500 text-white px-4 py-2 rounded-md">Create</Link>
-                    </div>
-                  )
-                }
-              </div>
-              <div data-wallet="disconnected">
-                <button data-wallet="disconnected">Disconnected</button>
-              </div>
-            </ConnectWallet>
+            {
+              company && (
+                <>
+                  <CompanyInfo company={company} />
+                </>
+              )
+            }
+            {
+              !company && (
+                <div>
+                  <Link href="/company/create" className="bg-blue-500 text-white px-4 py-2 rounded-md">Create</Link>
+                </div>
+              )
+            }
           </>
         )
       }
@@ -91,8 +84,7 @@ export function Company() {
 function CompanyInfo({ company }: { company: Company }) {
   return (
     <div className="max-w-3xl mx-auto">
-
-      <h1 className="text-3xl font-bold mb-6 flex items-center gap-2 text-gray-900">
+      <h1 className="text-3xl font-bold mb-6 flex items-center gap-2 text-gray-900 dark:text-white">
         🏢 {company.name}
       </h1>
 
@@ -137,8 +129,8 @@ function CompanyInfo({ company }: { company: Company }) {
       </div>
 
       {/* 会社概要 */}
-      <div className="bg-white shadow-xl rounded-xl p-6 mb-8 mt-10">
-        <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-gray-900">
+      <div className="bg-white dark:bg-gray-800 shadow-xl rounded-xl p-6 mb-8 mt-10">
+        <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
           📄 会社概要
         </h2>
 
@@ -165,17 +157,17 @@ function CompanyInfo({ company }: { company: Company }) {
 function InfoRow({ label, value }: { label: string; value?: string }) {
   return (
     <div className="flex justify-between border-b py-2">
-      <span className="text-gray-600">{label}</span>
-      <span className="font-medium text-gray-800">{value || "未設定"}</span>
+      <span className="text-gray-600 dark:text-gray-400">{label}</span>
+      <span className="font-medium text-gray-800 dark:text-gray-200">{value || "未設定"}</span>
     </div>
   );
 }
 
 function SectionBlock({ title, value }: { title: string; value?: string }) {
   return (
-    <div className="bg-white shadow-md rounded-xl p-6 mb-8">
-      <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-gray-900">{title}</h2>
-      <p className="text-gray-700 whitespace-pre-line">
+    <div className="bg-white dark:bg-gray-800 shadow-md rounded-xl p-6 mb-8">
+      <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">{title}</h2>
+      <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">
         {value || "（未入力）"}
       </p>
     </div>
@@ -194,7 +186,7 @@ function DashboardButton({
   return (
     <Link
       href={href}
-      className={`block text-center py-4 rounded-xl text-white font-semibold text-lg shadow bg-gradient-to-r ${color} hover:opacity-90 transition`}
+      className={`block text-center py-4 rounded-xl text-white font-semibold text-lg shadow bg-linear-to-r ${color} hover:opacity-90 transition`}
     >
       {label}
     </Link>

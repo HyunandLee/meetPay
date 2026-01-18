@@ -12,7 +12,11 @@ const config = createConfig({
   chains: [polygonAmoy],
   connectors: [injected()],
   transports: {
-    [polygonAmoy.id]: http(),
+    [polygonAmoy.id]: http(
+      process.env.NEXT_PUBLIC_POLYGON_AMOY_RPC_URL || 
+      process.env.NEXT_PUBLIC_AMOY_RPC_URL ||
+      undefined
+    ),
   },
 });
 

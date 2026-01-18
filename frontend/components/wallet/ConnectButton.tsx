@@ -1,10 +1,8 @@
-import { useConnection, useDisconnect, useEnsAvatar, useEnsName } from "wagmi";
+import { useConnection, useDisconnect } from "wagmi";
 
 export function ConnectButton() {
   const { address } = useConnection();
   const { disconnect } = useDisconnect();
-  const { data: ensName } = useEnsName({ address });
-  const { data: ensAvatar } = useEnsAvatar({ name: ensName! });
 
   return (
     <div>
