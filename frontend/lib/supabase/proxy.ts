@@ -6,7 +6,6 @@ export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request
   })
-  console.log('supabaseResponse:', supabaseResponse);
 
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -29,11 +28,18 @@ export async function updateSession(request: NextRequest) {
 
   const url = request.nextUrl.clone();
   try {
-    const { data } = await supabase.auth.getClaims()
-    // console.log('data:', data);
-
-    const user = data?.claims?.user;
+    const { data: { user } } = await supabase.auth.getUser()
+    
     if (!user) {
+      // すでにログインページや登録ページにいる場合はリダイレクトしない
+      if (url.pathname === "/company/login" || url.pathname === "/company/register") {
+        return supabaseResponse;
+      }
+      if (url.pathname === "/student/login" || url.pathname === "/student/signup") {
+        return supabaseResponse;
+      }
+      
+      // ログインページにリダイレクト
       if (url.pathname.startsWith("/company")) {
         url.pathname = "/company/login";
       } else if (url.pathname.startsWith("/student")) {
@@ -41,6 +47,20 @@ export async function updateSession(request: NextRequest) {
       }
       return NextResponse.redirect(url);
     }
+
+    // 1. url.pathname ends with "/login" -> redirect to "/dashboard"
+    console.log('url.pathname:', url.pathname);
+    if (url.pathname.endsWith("/login")) {
+      url.pathname = url.pathname.replace("/login", "/dashboard");
+      return NextResponse.redirect(url);
+    }
+
+    // // 2. url.pathname ends with "/register" -> redirect to "/dashboard"
+    // if (url.pathname.endsWith("/register")) {
+    //   url.pathname = url.pathname.replace("/register", "/dashboard");
+    //   return NextResponse.redirect(url);
+    // }
+
     return supabaseResponse;
   } catch (error) {
     // delete cookies
