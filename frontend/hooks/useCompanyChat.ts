@@ -137,10 +137,46 @@ export function useCompanyChat() {
 
   useEffect(() => {
     if (!selectedId) return;
+    
+    // 初期メッセージ取得
     fetchMessages(selectedId)
       .then(setMessages)
       .catch((e) => setError(e.message ?? "メッセージの取得に失敗しました"))
       .finally(() => setLoadingMessages(false));
+
+    // Supabase Realtime購読
+    const channel = supabase
+      .channel(`thread:${selectedId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `thread_id=eq.${selectedId}`
+        },
+        (payload) => {
+          const newMessage = payload.new as ChatMessage;
+          // 重複チェック（既に存在するメッセージは追加しない）
+          setMessages((prev) => {
+            const exists = prev.some((msg) => msg.id === newMessage.id);
+            if (exists) return prev;
+            return [...prev, newMessage];
+          });
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log(`Subscribed to thread: ${selectedId}`);
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error(`Realtime subscription error for thread: ${selectedId}`);
+          setError('リアルタイム接続に失敗しました。ページを再読み込みしてください。');
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [selectedId]);
 
   async function handleStartThread(data: NewThreadData) {
@@ -170,39 +206,49 @@ export function useCompanyChat() {
 
   async function handleSendMessage(message: string) {
     if (!selectedId || !message.trim()) return;
-    await sendMessage({
-      threadId: selectedId,
-      sender: "company",
-      type: "text",
-      body: message,
-    });
-    const msgs = await fetchMessages(selectedId);
-    setMessages(msgs);
+    try {
+      await sendMessage({
+        threadId: selectedId,
+        sender: "company",
+        type: "text",
+        body: message,
+      });
+      // Realtimeで自動的にメッセージが追加されるため、手動のfetchMessagesは不要
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : "メッセージの送信に失敗しました";
+      setError(errorMessage);
+      throw e;
+    }
   }
 
   async function handleCompleteInterview(note: string) {
     if (!selectedId) return;
-    await completeInterview({
-      threadId: selectedId,
-      notes: note,
-    });
-    await sendMessage({
-      threadId: selectedId,
-      sender: "company",
-      type: "note",
-      body: "面談が完了しました",
-    });
-    if (note.trim()) {
+    try {
+      await completeInterview({
+        threadId: selectedId,
+        notes: note,
+      });
       await sendMessage({
         threadId: selectedId,
         sender: "company",
         type: "note",
-        body: `面談メモ: ${note}`,
+        body: "面談が完了しました",
       });
+      if (note.trim()) {
+        await sendMessage({
+          threadId: selectedId,
+          sender: "company",
+          type: "note",
+          body: `面談メモ: ${note}`,
+        });
+      }
+      // Realtimeで自動的にメッセージが追加されるため、手動のfetchMessagesは不要
+      if (companyId) await loadThreads(companyId);
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : "面談完了処理に失敗しました";
+      setError(errorMessage);
+      throw e;
     }
-    const msgs = await fetchMessages(selectedId);
-    setMessages(msgs);
-    if (companyId) await loadThreads(companyId);
   }
 
   async function applyRecentWallet(threadId: string) {

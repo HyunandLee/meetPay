@@ -8,6 +8,7 @@ import {
   sendMessage,
 } from "@/lib/chatApi";
 import { ChatMessage, Thread } from "@/lib/chatTypes";
+import { supabase } from "@/utils/supabaseClient";
 
 export function useStudentChat() {
   const searchParams = useSearchParams();
@@ -61,31 +62,71 @@ export function useStudentChat() {
 
   useEffect(() => {
     if (!selectedId) return;
+    
+    // 初期メッセージ取得
     fetchMessages(selectedId)
       .then(setMessages)
       .catch((e) => setError(e.message ?? "メッセージの取得に失敗しました"))
       .finally(() => setLoadingMessages(false));
+
+    // Supabase Realtime購読
+    const channel = supabase
+      .channel(`thread:${selectedId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `thread_id=eq.${selectedId}`
+        },
+        (payload) => {
+          const newMessage = payload.new as ChatMessage;
+          // 重複チェック（既に存在するメッセージは追加しない）
+          setMessages((prev) => {
+            const exists = prev.some((msg) => msg.id === newMessage.id);
+            if (exists) return prev;
+            return [...prev, newMessage];
+          });
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log(`Subscribed to thread: ${selectedId}`);
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error(`Realtime subscription error for thread: ${selectedId}`);
+          setError('リアルタイム接続に失敗しました。ページを再読み込みしてください。');
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [selectedId]);
 
   async function handleSendMessage(message: string) {
     if (!selectedId || !message.trim()) return;
-    await sendMessage({
-      threadId: selectedId,
-      sender: "student",
-      type: "text",
-      body: message,
-    });
-    const msgs = await fetchMessages(selectedId);
-    setMessages(msgs);
+    try {
+      await sendMessage({
+        threadId: selectedId,
+        sender: "student",
+        type: "text",
+        body: message,
+      });
+      // Realtimeで自動的にメッセージが追加されるため、手動のfetchMessagesは不要
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : "メッセージの送信に失敗しました";
+      setError(errorMessage);
+      throw e;
+    }
   }
 
   async function handleAccept() {
     if (!selectedId) return;
     try {
       await acceptThread(selectedId, "オファーを承認しました");
-      setLoadingMessages(true);
-      const msgs = await fetchMessages(selectedId);
-      setMessages(msgs);
+      // acceptThread内でメッセージが作成されるため、Realtimeで自動的に追加される
+      // ただし、スレッドステータスの変更を反映するためにスレッド一覧を更新
       if (studentId) {
         const list = await listStudentThreads(studentId);
         setThreads(list);
@@ -93,8 +134,6 @@ export function useStudentChat() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "承認処理に失敗しました");
       throw e;
-    } finally {
-      setLoadingMessages(false);
     }
   }
 
