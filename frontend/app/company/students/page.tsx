@@ -95,20 +95,20 @@ function StudentCard({ student }: { student: Student }) {
       <div className="mt-4 flex flex-wrap gap-2">
         <Link
           href={profileHref}
-          className="inline-block bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
+          className="inline-block bg-linear-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
         >
           プロフィールを見る
         </Link>
         <Link
           href={chatHref}
-          className="inline-block bg-gradient-to-r from-orange-500 to-amber-500 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
+          className="inline-block bg-linear-to-r from-orange-500 to-amber-500 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
         >
           チャットする
         </Link>
         {student.wallet_address && (
           <Link
             href={`/company/offer-send?to=${student.wallet_address}`}
-            className="inline-block bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
+            className="inline-block bg-linear-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
           >
             🎁 オファーを送る
           </Link>

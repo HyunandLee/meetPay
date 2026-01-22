@@ -46,7 +46,7 @@ export default function StudentChatPage() {
           <h1 className="text-3xl font-bold flex items-center gap-2">💬 チャット（学生）</h1>
           <Link
             href="/companies"
-            className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
+            className="bg-linear-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
           >
             企業検索へ
           </Link>

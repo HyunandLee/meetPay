@@ -125,7 +125,7 @@ export function NewOfferForm({
       <button
         onClick={handleSubmit}
         disabled={loading}
-        className="mt-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg hover:opacity-90"
+        className="mt-3 bg-linear-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg hover:opacity-90"
       >
         スレッドを作成して送信
       </button>

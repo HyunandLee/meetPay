@@ -136,7 +136,7 @@ export default function CompanyDashboard() {
           <p className="text-gray-600">{displayError}</p>
           <button
             onClick={() => setRetryCount((n) => n + 1)}
-            className="inline-block bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-3 rounded-lg hover:opacity-90 transition"
+            className="inline-block bg-linear-to-r from-blue-500 to-indigo-500 text-white px-6 py-3 rounded-lg hover:opacity-90 transition"
           >
             再読み込みする
           </button>
@@ -152,7 +152,7 @@ export default function CompanyDashboard() {
           <p className="text-gray-600">セッションが切れている可能性があります。</p>
           <Link
             href="/company/login"
-            className="inline-block bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-3 rounded-lg hover:opacity-90 transition"
+            className="inline-block bg-linear-to-r from-blue-500 to-indigo-500 text-white px-6 py-3 rounded-lg hover:opacity-90 transition"
           >
             ログインへ
           </Link>
@@ -169,7 +169,7 @@ export default function CompanyDashboard() {
 
           <Link
             href="/company/profile"
-            className="inline-block bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-6 py-3 rounded-lg hover:opacity-90 transition"
+            className="inline-block bg-linear-to-r from-purple-500 to-indigo-500 text-white px-6 py-3 rounded-lg hover:opacity-90 transition"
           >
             プロフィールを作成する ✏️
           </Link>
@@ -284,7 +284,7 @@ function DashboardButton({
   return (
     <Link
       href={href}
-      className={`block text-center py-4 rounded-xl text-white font-semibold text-lg shadow bg-gradient-to-r ${color} hover:opacity-90 transition`}
+      className={`block text-center py-4 rounded-xl text-white font-semibold text-lg shadow bg-linear-to-r ${color} hover:opacity-90 transition`}
     >
       {label}
     </Link>

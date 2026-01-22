@@ -23,7 +23,7 @@ export function RecentInterviewees({ interviewees, onApplyWallet }: RecentInterv
             </p>
             <button
               onClick={() => onApplyWallet(s.threadId)}
-              className="mt-2 text-sm bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-3 py-1 rounded-lg hover:opacity-90"
+              className="mt-2 text-sm bg-linear-to-r from-purple-500 to-indigo-600 text-white px-3 py-1 rounded-lg hover:opacity-90"
             >
               送金ページへ
             </button>

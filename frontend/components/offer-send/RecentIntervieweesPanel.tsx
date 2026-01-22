@@ -33,7 +33,7 @@ export function RecentIntervieweesPanel({
               onClick={() => {
                 if (r.student_wallet) onSelect(r.student_wallet, r.thread_id);
               }}
-              className="text-sm bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-3 py-2 rounded-lg hover:opacity-90"
+              className="text-sm bg-linear-to-r from-purple-500 to-indigo-600 text-white px-3 py-2 rounded-lg hover:opacity-90"
             >
               宛先にセット
             </button>

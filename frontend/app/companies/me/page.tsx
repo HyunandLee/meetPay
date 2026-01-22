@@ -75,7 +75,7 @@ export default function CompanyProfilePublicPage() {
           <p className="text-gray-600">{error}</p>
           <Link
             href="/companies"
-            className="inline-block bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-3 rounded-lg hover:opacity-90 transition"
+            className="inline-block bg-linear-to-r from-blue-500 to-indigo-600 text-white px-6 py-3 rounded-lg hover:opacity-90 transition"
           >
             企業検索に戻る
           </Link>
@@ -91,7 +91,7 @@ export default function CompanyProfilePublicPage() {
           <p className="text-gray-600">選択した企業の情報が見つかりませんでした。</p>
           <Link
             href="/companies"
-            className="inline-block bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-3 rounded-lg hover:opacity-90 transition"
+            className="inline-block bg-linear-to-r from-blue-500 to-indigo-600 text-white px-6 py-3 rounded-lg hover:opacity-90 transition"
           >
             企業検索に戻る
           </Link>

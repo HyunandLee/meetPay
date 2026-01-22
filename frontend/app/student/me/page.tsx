@@ -72,7 +72,7 @@ export default function StudentProfileViewPage() {
           <p className="text-gray-600">{error}</p>
           <Link
             href="/student/login"
-            className="inline-block bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-3 rounded-lg hover:opacity-90 transition"
+            className="inline-block bg-linear-to-r from-blue-500 to-indigo-600 text-white px-6 py-3 rounded-lg hover:opacity-90 transition"
           >
             ログインへ
           </Link>
@@ -88,7 +88,7 @@ export default function StudentProfileViewPage() {
           <p className="text-gray-600">学生プロフィールを作成してください。</p>
           <Link
             href="/student/profile"
-            className="inline-block bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-6 py-3 rounded-lg hover:opacity-90 transition"
+            className="inline-block bg-linear-to-r from-purple-500 to-indigo-600 text-white px-6 py-3 rounded-lg hover:opacity-90 transition"
           >
             プロフィールを作成する ✏️
           </Link>

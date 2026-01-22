@@ -938,7 +938,7 @@ export default function OfferSendPage() {
                 hasEthereum === false ||
                 chainMismatch
               }
-              className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl text-lg font-semibold hover:opacity-90 transition"
+              className="w-full py-3 bg-linear-to-r from-purple-600 to-indigo-600 text-white rounded-xl text-lg font-semibold hover:opacity-90 transition"
             >
               {isSending || isConnecting ? "送信中..." : "オファーを送る"}
             </button>
@@ -985,7 +985,7 @@ export default function OfferSendPage() {
                   if (r.student_wallet) setTo(r.student_wallet);
                   setThreadId(r.thread_id);
                 }}
-                className="text-sm bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-3 py-2 rounded-lg hover:opacity-90"
+                className="text-sm bg-linear-to-r from-purple-500 to-indigo-600 text-white px-3 py-2 rounded-lg hover:opacity-90"
               >
                 宛先にセット
               </button>

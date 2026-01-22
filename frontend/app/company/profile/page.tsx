@@ -173,7 +173,7 @@ export default function CompanyProfilePage() {
         <div className="text-center mt-10">
           <button
             onClick={saveProfile}
-            className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-8 py-3 rounded-lg shadow hover:opacity-90 transition"
+            className="bg-linear-to-r from-purple-600 to-indigo-600 text-white px-8 py-3 rounded-lg shadow hover:opacity-90 transition"
           >
             保存する 🚀
           </button>

@@ -154,7 +154,7 @@ export default function StudentProfilePage() {
           {/* Save */}
           <button
             onClick={save}
-            className="w-full py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl text-lg font-semibold hover:opacity-90 transition"
+            className="w-full py-3 bg-linear-to-r from-purple-500 to-indigo-600 text-white rounded-xl text-lg font-semibold hover:opacity-90 transition"
           >
             保存する
           </button>

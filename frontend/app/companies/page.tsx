@@ -96,13 +96,13 @@ function CompanyCard({ company }: { company: Company }) {
       <div className="mt-4 flex flex-wrap gap-2">
         <Link
           href={`/companies/me?id=${encodeURIComponent(company.id)}`}
-          className="inline-block bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
+          className="inline-block bg-linear-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
         >
           プロフィールを見る
         </Link>
         <Link
           href={`/student/chat?companyId=${encodeURIComponent(company.id)}`}
-          className="inline-block bg-gradient-to-r from-orange-500 to-amber-500 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
+          className="inline-block bg-linear-to-r from-orange-500 to-amber-500 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
         >
           チャットする
         </Link>
