@@ -73,7 +73,7 @@ export default function CompanyOffers() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-gray-100 p-6 text-gray-900">
+    <main className="min-h-screen bg-sky-100 p-6 text-gray-900">
       <div className="max-w-3xl mx-auto">
 
         {/* 共通：ダッシュボードに戻る */}

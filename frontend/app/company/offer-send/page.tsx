@@ -721,7 +721,7 @@ export default function OfferSendPage() {
 
   if (!hydrated) {
     return (
-      <main className="min-h-screen bg-gray-100 p-6 text-gray-900">
+      <main className="min-h-screen bg-sky-100 p-6 text-gray-900">
         <div className="max-w-xl mx-auto">
           <BackToDashboard href="/company/dashboard" />
           <p className="text-gray-600 mt-4">読み込み中...</p>
@@ -731,7 +731,7 @@ export default function OfferSendPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-100 p-6 text-gray-900">
+    <main className="min-h-screen bg-sky-100 p-6 text-gray-900">
       <div className="max-w-xl mx-auto">
 
         <BackToDashboard href="/company/dashboard" />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import BackToDashboard from "@/components/BackToDashboard";
 import {
   completeInterview,
@@ -30,6 +30,7 @@ type RecentOption = {
 };
 
 export default function CompanyChatPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const targetStudentId = searchParams.get("studentId") ?? searchParams.get("student");
   const [companyId, setCompanyId] = useState<string | null>(null);
@@ -42,7 +43,6 @@ export default function CompanyChatPage() {
 
   const [students, setStudents] = useState<StudentOption[]>([]);
   const [recentInterviewees, setRecentInterviewees] = useState<RecentOption[]>([]);
-  const [appliedTarget, setAppliedTarget] = useState(false);
   const [newThread, setNewThread] = useState({
     studentId: "",
     amount: "",
@@ -58,50 +58,25 @@ export default function CompanyChatPage() {
     () => threads.find((t) => t.id === selectedId) ?? null,
     [threads, selectedId]
   );
+  const selectedStudentId = newThread.studentId || targetStudentId || "";
 
-  useEffect(() => {
-    async function boot() {
-      setLoadingThreads(true);
-      const id = await fetchCompanyProfileId();
-      if (!id) {
-        setError("企業プロフィールが見つかりません。");
-        setLoadingThreads(false);
-        return;
-      }
-      setCompanyId(id);
-      await Promise.all([loadThreads(id), loadStudents(), loadRecent(id)]);
-      setLoadingThreads(false);
-    }
-    boot().catch((e) => {
-      console.error(e);
-      setError("初期化でエラーが発生しました");
-      setLoadingThreads(false);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!targetStudentId || appliedTarget || loadingThreads) return;
-    const matched = threads.find((t) => t.student_id === targetStudentId);
-    setNewThread((s) => ({ ...s, studentId: targetStudentId }));
-    if (matched) {
-      setSelectedId(matched.id);
-    }
-    setAppliedTarget(true);
-  }, [appliedTarget, loadingThreads, targetStudentId, threads]);
-
-  useEffect(() => {
-    if (!selectedId) return;
-    setLoadingMessages(true);
-    fetchMessages(selectedId)
-      .then(setMessages)
-      .catch((e) => setError(e.message ?? "メッセージの取得に失敗しました"))
-      .finally(() => setLoadingMessages(false));
-  }, [selectedId]);
+  function selectThread(nextId: string | null) {
+    if (nextId && nextId !== selectedId) setLoadingMessages(true);
+    setSelectedId(nextId);
+  }
 
   async function loadThreads(id: string) {
     const list = await listCompanyThreads(id);
     setThreads(list);
-    if (!selectedId && list.length > 0) setSelectedId(list[0].id);
+    let nextSelectedId: string | null = selectedId;
+    if (targetStudentId) {
+      const matched = list.find((t) => t.student_id === targetStudentId);
+      if (matched) nextSelectedId = matched.id;
+    }
+    if (!nextSelectedId && list.length > 0) nextSelectedId = list[0].id;
+    if (nextSelectedId && nextSelectedId !== selectedId) {
+      selectThread(nextSelectedId);
+    }
   }
 
   async function loadStudents() {
@@ -146,16 +121,44 @@ export default function CompanyChatPage() {
     );
   }
 
+  useEffect(() => {
+    async function boot() {
+      setLoadingThreads(true);
+      const id = await fetchCompanyProfileId();
+      if (!id) {
+        setError("企業プロフィールが見つかりません。");
+        setLoadingThreads(false);
+        return;
+      }
+      setCompanyId(id);
+      await Promise.all([loadThreads(id), loadStudents(), loadRecent(id)]);
+      setLoadingThreads(false);
+    }
+    boot().catch((e) => {
+      console.error(e);
+      setError("初期化でエラーが発生しました");
+      setLoadingThreads(false);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    fetchMessages(selectedId)
+      .then(setMessages)
+      .catch((e) => setError(e.message ?? "メッセージの取得に失敗しました"))
+      .finally(() => setLoadingMessages(false));
+  }, [selectedId]);
+
   async function handleStartThread() {
     if (!companyId) return;
-    if (!newThread.studentId) {
+    if (!selectedStudentId) {
       alert("学生を選択してください");
       return;
     }
     try {
       const threadId = await startOfferThread({
         companyId,
-        studentId: newThread.studentId,
+        studentId: selectedStudentId,
         amount: newThread.amount ? Number(newThread.amount) : null,
         currency: newThread.currency,
         meetingProvider: newThread.meetingProvider,
@@ -163,7 +166,7 @@ export default function CompanyChatPage() {
         body: newThread.body,
       });
       await loadThreads(companyId);
-      setSelectedId(threadId);
+      selectThread(threadId);
       setNewThread({
         studentId: "",
         amount: "",
@@ -172,8 +175,9 @@ export default function CompanyChatPage() {
         meetingLink: "",
         body: "",
       });
-    } catch (e: any) {
-      setError(e.message ?? "スレッド作成に失敗しました");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "スレッド作成に失敗しました";
+      setError(message);
     }
   }
 
@@ -196,20 +200,19 @@ export default function CompanyChatPage() {
       threadId: selectedId,
       notes: interviewNote,
     });
-    // ステータス更新後にチャットへ完了メモを残す
+    // ステータス更新後にチャットへ完了メッセージを残す
+    await sendMessage({
+      threadId: selectedId,
+      sender: "company",
+      type: "note",
+      body: "面談が完了しました",
+    });
     if (interviewNote.trim()) {
       await sendMessage({
         threadId: selectedId,
         sender: "company",
         type: "note",
-        body: `面談完了: ${interviewNote}`,
-      });
-    } else {
-      await sendMessage({
-        threadId: selectedId,
-        sender: "company",
-        type: "note",
-        body: "面談を完了しました",
+        body: `面談メモ: ${interviewNote}`,
       });
     }
     const msgs = await fetchMessages(selectedId);
@@ -224,7 +227,7 @@ export default function CompanyChatPage() {
       alert("ウォレットアドレスが見つかりません");
       return;
     }
-    window.location.href = `/company/offer-send?thread=${threadId}`;
+    router.push(`/company/offer-send?thread=${threadId}`);
   }
 
   function goToOfferSendWithSelected() {
@@ -233,11 +236,11 @@ export default function CompanyChatPage() {
     const params = new URLSearchParams();
     if (wallet) params.set("to", wallet);
     params.set("thread", selectedThread.id);
-    window.location.href = `/company/offer-send?${params.toString()}`;
+    router.push(`/company/offer-send?${params.toString()}`);
   }
 
   return (
-    <main className="min-h-screen bg-gray-100 p-6 text-gray-900">
+    <main className="min-h-screen bg-sky-100 p-6 text-gray-900">
       <div className="max-w-7xl mx-auto space-y-6">
         <BackToDashboard href="/company/dashboard" />
 
@@ -258,7 +261,7 @@ export default function CompanyChatPage() {
             <label className="text-sm text-gray-700">
               学生を選択
               <select
-                value={newThread.studentId}
+                value={selectedStudentId}
                 onChange={(e) => setNewThread((s) => ({ ...s, studentId: e.target.value }))}
                 className="w-full mt-1 p-2 border rounded-lg bg-gray-50"
               >
@@ -338,7 +341,7 @@ export default function CompanyChatPage() {
             {threads.map((t) => (
               <button
                 key={t.id}
-                onClick={() => setSelectedId(t.id)}
+                onClick={() => selectThread(t.id)}
                 className={`w-full text-left p-3 rounded-lg border ${
                   selectedId === t.id ? "border-indigo-500 bg-indigo-50" : "border-gray-200"
                 }`}

@@ -199,11 +199,11 @@ export default function StudentDashboard() {
             color="from-orange-500 to-yellow-500"
           />
 
-          <DashboardButton
-            label="💼 企業を探す"
-            href="/company/search" // 企業の検索ページ（後で作る）
-            color="from-green-500 to-emerald-600"
-          />
+        <DashboardButton
+          label="💼 企業を探す"
+          href="/companies"
+          color="from-green-500 to-emerald-600"
+        />
         </div>
 
         {/* プロフィール概要カード */}

@@ -80,6 +80,22 @@ export default function StudentProfilePublicPage() {
       </main>
     );
 
+  if (!profile)
+    return (
+      <main className="min-h-screen bg-gray-100 flex items-center justify-center p-6 text-gray-900">
+        <div className="bg-white p-8 shadow-xl rounded-xl text-center space-y-4">
+          <h1 className="text-2xl font-bold">学生プロフィールが見つかりません</h1>
+          <p className="text-gray-600">選択した学生の情報が見つかりませんでした。</p>
+          <Link
+            href="/company/students"
+            className="inline-block bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-3 rounded-lg hover:opacity-90 transition"
+          >
+            学生検索に戻る
+          </Link>
+        </div>
+      </main>
+    );
+
   return (
     <main className="min-h-screen bg-gray-100 p-6 text-gray-900">
       <div className="max-w-2xl mx-auto space-y-6">

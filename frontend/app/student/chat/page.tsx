@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import BackToDashboard from "@/components/BackToDashboard";
+import Link from "next/link";
 import {
   acceptThread,
   fetchMessages,
@@ -12,6 +14,8 @@ import {
 import { ChatMessage, Thread } from "@/lib/chatTypes";
 
 export default function StudentChatPage() {
+  const searchParams = useSearchParams();
+  const targetCompanyId = searchParams.get("companyId") ?? searchParams.get("company");
   const [studentId, setStudentId] = useState<string | null>(null);
   const [threads, setThreads] = useState<Thread[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -26,6 +30,11 @@ export default function StudentChatPage() {
     [threads, selectedId]
   );
 
+  function selectThread(nextId: string | null) {
+    if (nextId && nextId !== selectedId) setLoadingMessages(true);
+    setSelectedId(nextId);
+  }
+
   useEffect(() => {
     async function boot() {
       setLoadingThreads(true);
@@ -38,7 +47,13 @@ export default function StudentChatPage() {
       setStudentId(id);
       const list = await listStudentThreads(id);
       setThreads(list);
-      if (list.length > 0) setSelectedId(list[0].id);
+      let nextSelectedId: string | null = null;
+      if (targetCompanyId) {
+        const matched = list.find((t) => t.company_id === targetCompanyId);
+        if (matched) nextSelectedId = matched.id;
+      }
+      if (!nextSelectedId && list.length > 0) nextSelectedId = list[0].id;
+      if (nextSelectedId) selectThread(nextSelectedId);
       setLoadingThreads(false);
     }
     boot().catch((e) => {
@@ -50,7 +65,6 @@ export default function StudentChatPage() {
 
   useEffect(() => {
     if (!selectedId) return;
-    setLoadingMessages(true);
     fetchMessages(selectedId)
       .then(setMessages)
       .catch((e) => setError(e.message ?? "メッセージの取得に失敗しました"))
@@ -72,10 +86,19 @@ export default function StudentChatPage() {
 
   async function handleAccept() {
     if (!selectedId) return;
-    await acceptThread(selectedId, "オファーを承認しました");
-    if (studentId) {
-      const list = await listStudentThreads(studentId);
-      setThreads(list);
+    try {
+      await acceptThread(selectedId, "オファーを承認しました");
+      setLoadingMessages(true);
+      const msgs = await fetchMessages(selectedId);
+      setMessages(msgs);
+      if (studentId) {
+        const list = await listStudentThreads(studentId);
+        setThreads(list);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "承認処理に失敗しました");
+    } finally {
+      setLoadingMessages(false);
     }
   }
 
@@ -84,7 +107,15 @@ export default function StudentChatPage() {
       <div className="max-w-6xl mx-auto space-y-6">
         <BackToDashboard href="/student/dashboard" />
 
-        <h1 className="text-3xl font-bold flex items-center gap-2">💬 チャット（学生）</h1>
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-3xl font-bold flex items-center gap-2">💬 チャット（学生）</h1>
+          <Link
+            href="/companies"
+            className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
+          >
+            企業検索へ
+          </Link>
+        </div>
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded">{error}</div>
@@ -98,7 +129,7 @@ export default function StudentChatPage() {
             {threads.map((t) => (
               <button
                 key={t.id}
-                onClick={() => setSelectedId(t.id)}
+                onClick={() => selectThread(t.id)}
                 className={`w-full text-left p-3 rounded-lg border ${
                   selectedId === t.id ? "border-indigo-500 bg-indigo-50" : "border-gray-200"
                 }`}

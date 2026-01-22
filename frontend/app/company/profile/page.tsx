@@ -126,7 +126,7 @@ export default function CompanyProfilePage() {
     return <p className="text-center mt-20 text-gray-500">読み込み中...</p>;
 
   return (
-    <main className="min-h-screen bg-gray-100 p-6">
+    <main className="min-h-screen bg-sky-100 p-6">
       <div className="max-w-3xl mx-auto">
 
         {/* ダッシュボードへ戻る */}

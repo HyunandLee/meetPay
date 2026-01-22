@@ -130,7 +130,7 @@ export default function CompanyDashboard() {
 
   if (displayError)
     return (
-      <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-sky-100 flex flex-col items-center justify-center">
         <div className="bg-white p-8 shadow-xl rounded-xl text-center space-y-4">
           <h1 className="text-2xl font-bold">読み込みに失敗しました</h1>
           <p className="text-gray-600">{displayError}</p>
@@ -146,7 +146,7 @@ export default function CompanyDashboard() {
 
   if (authReady && !userId && !authError)
     return (
-      <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-sky-100 flex flex-col items-center justify-center">
         <div className="bg-white p-8 shadow-xl rounded-xl text-center space-y-4">
           <h1 className="text-2xl font-bold">ログインが必要です</h1>
           <p className="text-gray-600">セッションが切れている可能性があります。</p>
@@ -162,7 +162,7 @@ export default function CompanyDashboard() {
 
   if (!profile)
     return (
-      <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-sky-100 flex flex-col items-center justify-center">
         <div className="bg-white p-8 shadow-xl rounded-xl text-center">
           <h1 className="text-2xl font-bold mb-4">🏢 プロフィール未登録</h1>
           <p className="text-gray-600 mb-6">まずは企業プロフィールを作成してください。</p>
@@ -178,7 +178,7 @@ export default function CompanyDashboard() {
     );
 
   return (
-    <main className="min-h-screen bg-gray-100 p-6">
+    <main className="min-h-screen bg-sky-100 p-6">
       <div className="max-w-3xl mx-auto">
 
         <h1 className="text-3xl font-bold mb-6 flex items-center gap-2 text-gray-900">

@@ -28,7 +28,7 @@ export default function CompanyLoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-100 p-6 flex items-center justify-center">
+    <main className="min-h-screen bg-sky-100 p-6 flex items-center justify-center">
       <div className="bg-white w-full max-w-lg p-8 rounded-2xl shadow-xl">
         <h1 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-2">
           🏢 企業ログイン
