@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { useConnection, useDisconnect } from "wagmi";
 import { loginAction } from "@/app/actions/loginAction";
 import Form from "next/form"
 import Link from "next/link";
@@ -9,11 +10,20 @@ export default function CompanyLogin() {
   const [state, formAction] = useActionState(loginAction, {
     error: null as string | null,
   });
+  const { isConnected } = useConnection();
+  const { disconnect } = useDisconnect();
+
+  useEffect(() => {
+    if (isConnected) {
+      disconnect();
+    }
+  }, [isConnected, disconnect]);
+
   return (
-    <main className="p-6 flex min-h-screen items-center justify-center ">
+    <main className="p-6 flex min-h-screen items-center justify-center">
       <div className=" w-full max-w-lg rounded-2xl">
         <h1 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-          🏢 企業ログイン
+          🏢 企業ログイン { isConnected ? "Connected" : "Disconnected" }
         </h1>
 
         <Form action={formAction}>

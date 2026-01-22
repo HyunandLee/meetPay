@@ -1,76 +1,111 @@
 "use client";
 
+import { z } from "zod";
 import { useEffect, useState } from "react";
-import { supabase } from "@/utils/supabaseClient";
+import { getCompany } from "@/utils/company";
 import { createPublicClient, http, parseAbiItem } from "viem";
 import { polygonAmoy } from "viem/chains";
 import { TJPYC_ADDRESS } from "@/constants";
-import Link from "next/link";
 import BackToDashboard from "@/components/BackToDashboard";
+import { useConnection } from "wagmi";
 
-type OfferLog = {
-  to: `0x${string}`;
-  amount: bigint;
-  hash: `0x${string}`;
-};
+const offerLogSchema = z.object({
+  to: z.string().regex(/^0x[0-9a-fA-F]{40}$/),
+  amount: z.bigint(),
+  hash: z.string().regex(/^0x[0-9a-fA-F]{64}$/),
+});
+
+type OfferLog = z.infer<typeof offerLogSchema>;
 
 export default function CompanyOffers() {
-  const [walletAddress, setWalletAddress] = useState<`0x${string}` | null>(null);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [logs, setLogs] = useState<OfferLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const { isConnected, address } = useConnection();
 
   useEffect(() => {
     async function load() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      try {
+        const company = await getCompany(isConnected, address);
+        console.log("company", company);
+        if (!company) {
+          setLoading(false);
+          return;
+        }
 
-      if (!user) return setLoading(false);
+        const walletAddr = company.walletAddress;
+        console.log(walletAddr);
+        console.log("walletAddr", walletAddr);
+        if (walletAddr.length !== 42 || !walletAddr.startsWith("0x")) {
+          setLoading(false);
+          return;
+        }
+        const validatedWalletAddr = z.string().regex(/^0x[0-9a-fA-F]{40}$/).parse(walletAddr);
+        if (!validatedWalletAddr) {
+          setLoading(false);
+          return;
+        }
 
-      const { data } = await supabase
-        .from("company")
-        .select("wallet_address")
-        .eq("user_id", user.id)
-        .single();
+        // validate wallet address
+        setWalletAddress(validatedWalletAddr);
 
-      if (!data?.wallet_address) {
+        const client = createPublicClient({
+          chain: polygonAmoy,
+          transport: http(process.env.NEXT_PUBLIC_AMOY_RPC_URL),
+        });
+
+        const eventAbi = parseAbiItem(
+          "event Transfer(address indexed from, address indexed to, uint256 value)"
+        );
+
+        // ... existing code ...
+
+        const latest = await client.getBlockNumber();
+        // フリーティアのRPCでは10,000ブロックを超える範囲はサポートされていないため制限
+        // fromBlockとtoBlockの差が10,000ブロック以内になるようにする
+        const maxBlockRange = 10_000n;
+        const fromBlock = latest > maxBlockRange ? latest - maxBlockRange : 0n;
+        const toBlock = latest; // 明示的にtoBlockを指定
+
+        console.log("Block range:", { 
+          latest: latest.toString(), 
+          fromBlock: fromBlock.toString(), 
+          toBlock: toBlock.toString(), 
+          range: (toBlock - fromBlock).toString() 
+        });
+
+        let rawLogs: Awaited<ReturnType<typeof client.getLogs>> = [];
+        try {
+          rawLogs = await client.getLogs({
+            address: TJPYC_ADDRESS,
+            event: eventAbi,
+            args: { from: walletAddr },
+            fromBlock,
+            toBlock, // 明示的にtoBlockを指定
+          });
+        } catch (error: any) {
+          console.error("Error fetching logs:", error);
+          // エラーが発生した場合は空の配列のまま
+        }
+
+        // ... existing code ...
+
+        const formatted: OfferLog[] = rawLogs.map((log: any) => ({
+          to: log.args!.to as `0x${string}`,
+          amount: log.args!.value!,
+          hash: log.transactionHash!,
+        }));
+        console.log("formatted", formatted);
+        setLogs(formatted);
+      } catch (error: any) {
+        console.error("Error loading company offers:", error);
+      } finally {
         setLoading(false);
-        return;
       }
-
-      setWalletAddress(data.wallet_address as `0x${string}`);
-
-      const client = createPublicClient({
-        chain: polygonAmoy,
-        transport: http(process.env.NEXT_PUBLIC_AMOY_RPC_URL),
-      });
-
-      const eventAbi = parseAbiItem(
-        "event Transfer(address indexed from, address indexed to, uint256 value)"
-      );
-
-      const latest = await client.getBlockNumber();
-      const fromBlock = latest > 50_000n ? latest - 50_000n : 0n;
-
-      const rawLogs = await client.getLogs({
-        address: TJPYC_ADDRESS,
-        event: eventAbi,
-        args: { from: data.wallet_address },
-        fromBlock,
-      });
-
-      const formatted: OfferLog[] = rawLogs.map((log) => ({
-        to: log.args!.to as `0x${string}`,
-        amount: log.args!.value!,
-        hash: log.transactionHash!,
-      }));
-
-      setLogs(formatted);
-      setLoading(false);
     }
 
     load();
-  }, []);
+  }, [isConnected, address]);
 
   return (
     <main className="min-h-screen bg-gray-100 p-6 text-gray-900">

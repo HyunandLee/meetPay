@@ -34,19 +34,27 @@ export async function getTransferLogsByAddress(target: string) {
   });
 
   const latest = await client.getBlockNumber();
-  const fromBlock = latest > 300_000n ? latest - 300_000n : 0n;
+  // フリーティアのRPCでは10,000ブロックを超える範囲はサポートされていないため制限
+  const fromBlock = latest > 10_000n ? latest - 10_000n : 0n;
 
-  const logs = await client.getLogs({
-    address: TJPYC_ADDRESS as Hex,
-    event: transferEvent,
-    // ⭐ target 宛だけ取得（高速 & 正確）
-    args: {
-      from: undefined,
-      to: target as Hex,
-    },
-    fromBlock,
-    toBlock: latest,
-  });
+  let logs;
+  try {
+    logs = await client.getLogs({
+      address: TJPYC_ADDRESS as Hex,
+      event: transferEvent,
+      // ⭐ target 宛だけ取得（高速 & 正確）
+      args: {
+        from: undefined,
+        to: target as Hex,
+      },
+      fromBlock,
+      toBlock: latest,
+    });
+  } catch (error: any) {
+    console.error("Error fetching transfer logs:", error);
+    // エラーが発生した場合は空の配列を返す
+    return [];
+  }
 
   const result: OfferLog[] = [];
 

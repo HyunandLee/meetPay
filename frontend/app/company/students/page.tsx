@@ -95,7 +95,7 @@ function StudentCard({ student }: { student: Student }) {
 
         {/* 👀 詳細ページへ */}
         <Link
-          href={`/company/students/${student.id}`}
+          href={`/company_legacy/students/${student.id}`}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
         >
           👀 詳細を見る
@@ -104,8 +104,8 @@ function StudentCard({ student }: { student: Student }) {
         {/* 🎁 直接オファー送る（詳細からも送れる設計にする） */}
         {student.wallet_address && (
           <Link
-            href={`/company/offer-send?to=${student.wallet_address}`}
-            className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
+            href={`/company_legacy/offer-send?to=${student.wallet_address}`}
+            className="bg-linear-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
           >
             🎁 オファー
           </Link>
