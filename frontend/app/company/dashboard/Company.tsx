@@ -1,11 +1,11 @@
 "use client";
 
-import { ConnectWallet } from "@/components/wallet/ConnectWallet";
+
 import { useConnection } from "wagmi";
-import { supabase } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { type Company } from "@/utils/types";
+import { getCompany } from "@/utils/company";
 
 export function Company() {
   const { isConnected, address } = useConnection();
@@ -15,33 +15,9 @@ export function Company() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    async function getCompany() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (isConnected && address) {
-        const { data, error } = await supabase.from("company").select("*").eq("wallet_address", address).single();
-        // console.log(data);
-        return data
-      }
-      if (user) {
-        const { data, error } = await supabase.from("company_link_user").select("*").eq("user_id", user.id).single();
-        if (error) {
-          return;
-        }
-        const company_id = data?.company_id;
-        if (company_id) {
-          const { data, error } = await supabase.from("company").select("*").eq("id", company_id).single();
-          if (error) {
-            console.error(error);
-            return;
-          }
-          return data;
-        }
-      }
-      return null;
-    }
     setIsLoading(true);
-    getCompany().then((data) => {
-      setCompany(data as unknown as Company);
+    getCompany(isConnected, address).then((data) => {
+      setCompany(data);
       setTimeout(() => {
         setIsLoading(false);
       }, 1000);
@@ -54,6 +30,13 @@ export function Company() {
         isLoading && (
           <div>
             <p>Loading...</p>
+          </div>
+        )
+      }
+      {
+        !isLoading && !isConnected && (
+          <div className="flex flex-col items-center justify-center">
+            <p>どの企業にも紐付けられていません</p>
           </div>
         )
       }
@@ -114,7 +97,7 @@ function CompanyInfo({ company }: { company: Company }) {
 
         {/* 新規オファー送信 */}
         <DashboardButton
-          href="/company/offer-send"
+          href="/company/send"
           label="🎁 学生にオファーを送る"
           color="from-green-500 to-emerald-600"
         />

@@ -54,27 +54,35 @@ export default function HistoryPage() {
     // 最新ブロック番号
     const latestBlock = await client.getBlockNumber();
 
-    // Amoy の RPC が弱いので、過去 50000 ブロックだけを見る
+    // フリーティアのRPCでは10,000ブロックを超える範囲はサポートされていないため制限
     const fromBlock =
-      latestBlock > BigInt(50000)
-        ? latestBlock - BigInt(50000)
+      latestBlock > BigInt(10000)
+        ? latestBlock - BigInt(10000)
         : BigInt(0);
 
-    // 受信ログ（to = 自分）
-    const receivedRaw = (await client.getLogs({
-      address: TJPYC_ADDRESS,
-      event: eventAbi,
-      args: { to: myAddress },
-      fromBlock,
-    })) as RawLog[];
+    let receivedRaw: RawLog[] = [];
+    let sentRaw: RawLog[] = [];
 
-    // 送信ログ（from = 自分）
-    const sentRaw = (await client.getLogs({
-      address: TJPYC_ADDRESS,
-      event: eventAbi,
-      args: { from: myAddress },
-      fromBlock,
-    })) as RawLog[];
+    try {
+      // 受信ログ（to = 自分）
+      receivedRaw = (await client.getLogs({
+        address: TJPYC_ADDRESS,
+        event: eventAbi,
+        args: { to: myAddress },
+        fromBlock,
+      })) as RawLog[];
+
+      // 送信ログ（from = 自分）
+      sentRaw = (await client.getLogs({
+        address: TJPYC_ADDRESS,
+        event: eventAbi,
+        args: { from: myAddress },
+        fromBlock,
+      })) as RawLog[];
+    } catch (error: any) {
+      console.error("Error fetching logs:", error);
+      // エラーが発生した場合は空の配列のまま
+    }
 
     // RawLog にブロックの timestamp を付けて TransferLog に変換
     const addTimestamp = async (log: RawLog): Promise<TransferLog> => {

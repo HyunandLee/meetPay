@@ -5,6 +5,7 @@ import { WagmiProvider, createConfig, http } from "wagmi";
 import { polygonAmoy } from "wagmi/chains";
 import { injected } from "wagmi/connectors";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { WalletAutoDisconnect } from "@/components/wallet/WalletAutoDisconnect";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <WagmiProvider config={config}>
           <QueryClientProvider client={queryClient}>
+            <WalletAutoDisconnect />
             {children}
           </QueryClientProvider>
         </WagmiProvider>

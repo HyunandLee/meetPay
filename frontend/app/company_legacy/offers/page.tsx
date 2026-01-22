@@ -50,16 +50,23 @@ export default function CompanyOffers() {
       );
 
       const latest = await client.getBlockNumber();
-      const fromBlock = latest > 50_000n ? latest - 50_000n : 0n;
+      // フリーティアのRPCでは10,000ブロックを超える範囲はサポートされていないため制限
+      const fromBlock = latest > 10_000n ? latest - 10_000n : 0n;
 
-      const rawLogs = await client.getLogs({
-        address: TJPYC_ADDRESS,
-        event: eventAbi,
-        args: { from: data.wallet_address },
-        fromBlock,
-      });
+      let rawLogs: Awaited<ReturnType<typeof client.getLogs>> = [];
+      try {
+        rawLogs = await client.getLogs({
+          address: TJPYC_ADDRESS,
+          event: eventAbi,
+          args: { from: data.wallet_address },
+          fromBlock,
+        });
+      } catch (error: any) {
+        console.error("Error fetching logs:", error);
+        // エラーが発生した場合は空の配列のまま
+      }
 
-      const formatted: OfferLog[] = rawLogs.map((log) => ({
+      const formatted: OfferLog[] = rawLogs.map((log: any) => ({
         to: log.args!.to as `0x${string}`,
         amount: log.args!.value!,
         hash: log.transactionHash!,

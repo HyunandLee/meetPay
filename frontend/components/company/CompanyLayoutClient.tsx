@@ -31,11 +31,13 @@ export default function CompanyClientLayout({ children, user }: CompanyClientLay
           user
             ? (
                 <>
-                  <button onClick={openModal} className="bg-blue-500 text-white px-4 py-2 rounded-md">
-                    {
-                      mounted && isConnected ? "Disconnect Wallet" : "Connect Wallet"
-                    }
-                  </button>
+                  {adminMode && (
+                    <button onClick={openModal} className="bg-blue-500 text-white px-4 py-2 rounded-md">
+                      {
+                        mounted && isConnected ? "Disconnect Wallet" : "Connect Wallet"
+                      }
+                    </button>
+                  )}
                   <LogoutButton />
                 </>
               )
