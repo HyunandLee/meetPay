@@ -1,5 +1,7 @@
 # MeetPay
 
+Demo (in Japanese): https://youtu.be/7DzGfuvFB9M?si=GSyJFoRSuLqYY9tX
+
 MeetPay is a prototype hiring workflow platform for managing **interview offers, structured communication, and micropayment-based payouts**.
 
 This project explores how backend design and Web3-based payment infrastructure can reduce hiring friction, improve transparency, and lower intermediary costs.
